@@ -10,6 +10,7 @@ export default function ExamTimerApp() {
   const [settingsSubmitted, setSettingsSubmitted] = useState(false);
   const [playAlert, setPlayAlert] = useState(false);
   const [questionLogs, setQuestionLogs] = useState([]);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     setTimeLeft(totalTime);
@@ -98,6 +99,17 @@ export default function ExamTimerApp() {
         {!settingsSubmitted ? (
           <form className="space-y-3 w-full" onSubmit={handleSettingsSubmit}>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">🙋‍♂️ Your Name</label>
+              <input
+                type="text"
+                className="w-full p-3 border rounded-lg text-center text-base"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Enter your name"
+                required
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">⏳ Total Time (mins)</label>
               <input
                 type="number"
@@ -144,30 +156,6 @@ export default function ExamTimerApp() {
             <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>Next Question</button>
           </div>
         )}
-        <div className="mt-4 w-full">
-          <h3 className="text-sm font-bold text-gray-700 mb-1">⏱ Log</h3>
-          <div className="bg-gray-50 rounded-lg p-2 shadow-inner max-h-32 overflow-y-auto border border-gray-300">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-gray-500">
-                  <th className="p-1">Q</th>
-                  <th className="p-1">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questionLogs.map((log, index) => {
-                  const [label, time] = log.split(" - ");
-                  return (
-                    <tr key={index}>
-                      <td className="p-1">{label}</td>
-                      <td className="p-1">{time}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   );
