@@ -102,7 +102,7 @@ export default function ExamTimerApp() {
                 <input
                   type="number"
                   min="1"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-4 border rounded-xl text-lg shadow"
                   value={totalTime / 60}
                   onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
                   required
@@ -113,16 +113,16 @@ export default function ExamTimerApp() {
                 <input
                   type="number"
                   min="1"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-4 border rounded-xl text-lg shadow"
                   value={totalQuestions}
                   onChange={(e) => setTotalQuestions(Number(e.target.value))}
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded">Next</button>
+              <button type="submit" className="w-full py-4 bg-blue-600 text-white text-lg rounded-xl shadow-md hover:bg-blue-700 transition">Next</button>
             </form>
           ) : !sessionStarted ? (
-            <button className="w-full py-2 bg-blue-600 text-white rounded" onClick={handleStart}>Start Exam</button>
+            <button className="w-full py-4 bg-green-600 text-white text-lg rounded-xl shadow-md hover:bg-green-700 transition" onClick={handleStart}>Start Exam</button>
           ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
             renderReport()
           ) : (
@@ -139,7 +139,7 @@ export default function ExamTimerApp() {
               </div>
               <div className="text-md font-semibold mb-2">⏰ Time Left: {timeLeft}s</div>
               <div className="text-md mb-4">📝 Question: {currentQuestion} / {totalQuestions}</div>
-              <button className="w-full py-2 bg-blue-600 text-white rounded" onClick={handleNextQuestion}>Next Question</button>
+              <button className="w-full py-4 bg-indigo-600 text-white text-lg rounded-xl shadow-md hover:bg-indigo-700 transition" onClick={handleNextQuestion}>Next Question</button>
             </div>
           )}
         </div>
