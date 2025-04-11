@@ -85,15 +85,15 @@ export default function ExamTimerApp() {
   return (
     <div className="p-4 max-w-sm mx-auto min-h-screen flex flex-col justify-center items-center bg-gray-50 text-center">
       <h1 className="text-xl font-bold mb-4">📘 Exam Timer</h1>
-      {!settingsSubmitted ? (
+      {!settingsSubmitted? (
         <form className="w-full space-y-4" onSubmit={handleSettingsSubmit}>
           <div>
             <label className="block text-sm font-medium mb-1">Total Exam Time (in minutes)</label>
             <input
               type="number"
-              min="1"
+              min = "1"
               className="w-full p-2 border rounded"
-              value={totalTime / 60}
+              value ={totalTime / 60}
               onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
               required
             />
@@ -102,7 +102,7 @@ export default function ExamTimerApp() {
             <label className="block text-sm font-medium mb-1">Total Number of Questions</label>
             <input
               type="number"
-              min="1"
+              min ="1"
               className="w-full p-2 border rounded"
               value={totalQuestions}
               onChange={(e) => setTotalQuestions(Number(e.target.value))}
@@ -111,7 +111,7 @@ export default function ExamTimerApp() {
           </div>
           <Button type="submit" className="w-full py-2">Next</Button>
         </form>
-      ) : !sessionStarted ? (
+      ): !sessionStarted ? (
         <Button className="w-full py-2" onClick={handleStart}>Start Exam</Button>
       ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
         renderReport()
@@ -127,4 +127,3 @@ export default function ExamTimerApp() {
     </div>
   );
 }
-
