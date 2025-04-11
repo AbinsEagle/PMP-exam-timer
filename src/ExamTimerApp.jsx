@@ -72,6 +72,21 @@ export default function ExamTimerApp() {
     setQuestionTimeLeft(0);
   };
 
+  const handleReset = () => {
+    setTotalQuestions(10);
+    setTotalTime(600);
+    setCurrentQuestion(1);
+    setTimeLeft(600);
+    setQuestionTimes(Array(10).fill(0));
+    setSessionStarted(false);
+    setSettingsSubmitted(false);
+    setPlayAlert(false);
+    setQuestionLogs([]);
+    setUserName("");
+    setExamFinished(false);
+    setQuestionTimeLeft(0);
+  };
+
   const handleSettingsSubmit = (e) => {
     e.preventDefault();
     setSettingsSubmitted(true);
@@ -148,7 +163,10 @@ export default function ExamTimerApp() {
             <button type="submit" className="w-full py-3 bg-blue-500 text-white text-xl rounded-xl hover:bg-blue-600 transition">Next</button>
           </form>
         ) : !sessionStarted ? (
-          <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
+          <>
+            <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
+            <button className="w-full py-2 bg-gray-300 text-gray-800 text-sm rounded-xl hover:bg-gray-400 transition" onClick={handleReset}>🔄 Reset</button>
+          </>
         ) : timeLeft <= 0 || examFinished ? (
           <div className="text-center w-full">
             <div className="mt-4">
@@ -163,6 +181,12 @@ export default function ExamTimerApp() {
                 className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
               >
                 📥 Download Excel Log
+              </button>
+              <button
+                onClick={handleReset}
+                className="mt-4 px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+              >
+                🔙 Back to Home
               </button>
             </div>
           </div>
@@ -182,6 +206,7 @@ export default function ExamTimerApp() {
             <div className="text-2xl font-bold text-gray-800 mb-1">⏰ Total: {timeLeft}s</div>
             <div className="text-sm text-gray-600 mb-4">📝 Q{currentQuestion} of {totalQuestions}</div>
             <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>{currentQuestion === totalQuestions ? "Finish" : "Next Question"}</button>
+            <button className="mt-2 px-4 py-2 bg-gray-300 text-gray-800 text-sm rounded hover:bg-gray-400 transition" onClick={handleReset}>🔄 Reset</button>
             {renderLiveLog()}
           </div>
         )}
