@@ -12,6 +12,7 @@ export default function ExamTimerApp() {
   const [playAlert, setPlayAlert] = useState(false);
   const [questionLogs, setQuestionLogs] = useState([]);
   const [userName, setUserName] = useState("");
+  const [examFinished, setExamFinished] = useState(false);
 
   useEffect(() => {
     setTimeLeft(totalTime);
@@ -20,7 +21,7 @@ export default function ExamTimerApp() {
 
   useEffect(() => {
     let timer;
-    if (sessionStarted && timeLeft > 0) {
+    if (sessionStarted && timeLeft > 0 && !examFinished) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           const newTime = prev - 1;
@@ -35,7 +36,7 @@ export default function ExamTimerApp() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [sessionStarted, currentQuestion, timeLeft]);
+  }, [sessionStarted, currentQuestion, timeLeft, examFinished]);
 
   useEffect(() => {
     if (playAlert) {
@@ -53,10 +54,13 @@ export default function ExamTimerApp() {
 
   const handleNextQuestion = () => {
     if (currentQuestion <= totalQuestions) {
-      setQuestionLogs((prev) => [...prev, `Q${currentQuestion} - ${formatTime(questionTimes[currentQuestion - 1])}`]);
+      const log = `Q${currentQuestion} - ${formatTime(questionTimes[currentQuestion - 1])}`;
+      setQuestionLogs((prev) => [...prev, log]);
     }
     if (currentQuestion < totalQuestions) {
       setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setExamFinished(true);
     }
   };
 
@@ -70,10 +74,10 @@ export default function ExamTimerApp() {
   };
 
   const handleDownload = () => {
-    const data = questionTimes.map((time, index) => ({
-      Question: `Q${index + 1}`,
-      Time: formatTime(time),
-    }));
+    const data = questionLogs.map((log) => {
+      const [question, time] = log.split(" - ");
+      return { Question: question, Time: time };
+    });
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Log");
@@ -84,16 +88,16 @@ export default function ExamTimerApp() {
     <div className="text-center w-full">
       <h2 className="text-lg font-bold mb-2">Session Report</h2>
       <ul className="list-inside">
-        {questionTimes.map((time, idx) => (
-          <li key={idx} className="text-sm">Question {idx + 1}: {formatTime(time)}</li>
+        {questionLogs.map((log, idx) => (
+          <li key={idx} className="text-sm">{log}</li>
         ))}
       </ul>
       <div className="mt-4">
         <h3 className="text-md font-semibold">Detailed Log</h3>
         <textarea
           readOnly
-          value={questionTimes.map((time, idx) => `Question ${idx + 1}: ${time} seconds`).join("\n")}
-          rows={totalQuestions + 1}
+          value={questionLogs.join("\n")}
+          rows={questionLogs.length + 1}
           className="w-full mt-2 p-2 border rounded text-sm"
         />
         <button
@@ -155,8 +159,16 @@ export default function ExamTimerApp() {
           </form>
         ) : !sessionStarted ? (
           <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
-        ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
-          renderReport()
+        ) : timeLeft <= 0 || examFinished ? (
+          <>
+            {renderReport()}
+            <button
+              onClick={handleDownload}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              📥 Download Excel Log
+            </button>
+          </>
         ) : (
           <div className="w-full text-center">
             <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
@@ -171,7 +183,7 @@ export default function ExamTimerApp() {
             </div>
             <div className="text-5xl font-bold text-gray-800 mb-2">⏰ {timeLeft}s</div>
             <div className="text-sm text-gray-600 mb-4">📝 Q{currentQuestion} of {totalQuestions}</div>
-            <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>Next Question</button>
+            <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>{currentQuestion === totalQuestions ? "Finish" : "Next Question"}</button>
           </div>
         )}
       </div>
