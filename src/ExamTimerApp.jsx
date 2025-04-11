@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 
 export default function ExamTimerApp() {
   const [totalQuestions, setTotalQuestions] = useState(10);
@@ -85,15 +83,15 @@ export default function ExamTimerApp() {
   return (
     <div className="p-4 max-w-sm mx-auto min-h-screen flex flex-col justify-center items-center bg-gray-50 text-center">
       <h1 className="text-xl font-bold mb-4">📘 Exam Timer</h1>
-      {!settingsSubmitted? (
+      {!settingsSubmitted ? (
         <form className="w-full space-y-4" onSubmit={handleSettingsSubmit}>
           <div>
             <label className="block text-sm font-medium mb-1">Total Exam Time (in minutes)</label>
             <input
               type="number"
-              min = "1"
+              min="1"
               className="w-full p-2 border rounded"
-              value ={totalTime / 60}
+              value={totalTime / 60}
               onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
               required
             />
@@ -102,26 +100,26 @@ export default function ExamTimerApp() {
             <label className="block text-sm font-medium mb-1">Total Number of Questions</label>
             <input
               type="number"
-              min ="1"
+              min="1"
               className="w-full p-2 border rounded"
               value={totalQuestions}
               onChange={(e) => setTotalQuestions(Number(e.target.value))}
               required
             />
           </div>
-          <Button type="submit" className="w-full py-2">Next</Button>
+          <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded">Next</button>
         </form>
-      ): !sessionStarted ? (
-        <Button className="w-full py-2" onClick={handleStart}>Start Exam</Button>
+      ) : !sessionStarted ? (
+        <button className="w-full py-2 bg-blue-600 text-white rounded" onClick={handleStart}>Start Exam</button>
       ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
         renderReport()
       ) : (
         <div className="w-full">
-          <Progress value={progressValue} className="mb-2 h-3 rounded-full" />
-          <Progress value={timeProgress} className="mb-4 h-2 bg-red-100 rounded-full" />
+          <progress value={progressValue} max="100" className="w-full mb-2 h-3" />
+          <progress value={timeProgress} max="100" className="w-full mb-4 h-2 bg-red-100" />
           <div className="text-md font-semibold mb-2">⏰ Time Left: {timeLeft}s</div>
           <div className="text-md mb-4">📝 Question: {currentQuestion} / {totalQuestions}</div>
-          <Button className="w-full py-2" onClick={handleNextQuestion}>Next Question</Button>
+          <button className="w-full py-2 bg-blue-600 text-white rounded" onClick={handleNextQuestion}>Next Question</button>
         </div>
       )}
     </div>
