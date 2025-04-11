@@ -93,27 +93,34 @@ export default function ExamTimerApp() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white border-2 border-gray-300 rounded-3xl shadow-2xl p-4 flex flex-col items-center font-sans">
+        <h1 className="text-xl text-gray-800 font-semibold mb-1">PMP Exam Timing Buddy</h1>
         <h1 className="text-4xl text-blue-600 font-bold mb-4">📘</h1>
         {!settingsSubmitted ? (
           <form className="space-y-3 w-full" onSubmit={handleSettingsSubmit}>
-            <input
-              type="number"
-              min="1"
-              className="w-full p-3 border rounded-lg text-center text-base"
-              value={totalTime / 60}
-              onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
-              placeholder="Total Time (mins)"
-              required
-            />
-            <input
-              type="number"
-              min="1"
-              className="w-full p-3 border rounded-lg text-center text-base"
-              value={totalQuestions}
-              onChange={(e) => setTotalQuestions(Number(e.target.value))}
-              placeholder="Total Questions"
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">⏳ Total Time (mins)</label>
+              <input
+                type="number"
+                min="1"
+                className="w-full p-3 border rounded-lg text-center text-base"
+                value={totalTime / 60}
+                onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
+                placeholder="Total Time (mins)"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">❓ Total Questions</label>
+              <input
+                type="number"
+                min="1"
+                className="w-full p-3 border rounded-lg text-center text-base"
+                value={totalQuestions}
+                onChange={(e) => setTotalQuestions(Number(e.target.value))}
+                placeholder="Total Questions"
+                required
+              />
+            </div>
             <button type="submit" className="w-full py-3 bg-blue-500 text-white text-xl rounded-xl hover:bg-blue-600 transition">Next</button>
           </form>
         ) : !sessionStarted ? (
