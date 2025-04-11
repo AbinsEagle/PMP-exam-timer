@@ -68,7 +68,7 @@ export default function ExamTimerApp() {
   };
 
   const renderReport = () => (
-    <div className="mt-4 text-center">
+    <div className="text-center w-full">
       <h2 className="text-lg font-bold mb-2">Session Report</h2>
       <ul className="list-inside">
         {questionTimes.map((time, idx) => (
@@ -91,74 +91,68 @@ export default function ExamTimerApp() {
   const timeProgress = (totalTime - timeLeft) / totalTime * 100;
 
   return (
-    <div className="p-4 max-w-4xl mx-auto min-h-screen flex flex-col justify-center items-start bg-gray-50 text-left">
-      <h1 className="text-xl font-bold mb-4 w-full text-center">📘 Exam Timer</h1>
-      <div className="w-full flex flex-col sm:flex-row gap-6">
-        <div className="flex-1">
-          {!settingsSubmitted ? (
-            <form className="space-y-4" onSubmit={handleSettingsSubmit}>
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Exam Time (in minutes)</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="w-full p-4 border rounded-xl text-lg shadow"
-                  value={totalTime / 60}
-                  onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Number of Questions</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="w-full p-4 border rounded-xl text-lg shadow"
-                  value={totalQuestions}
-                  onChange={(e) => setTotalQuestions(Number(e.target.value))}
-                  required
-                />
-              </div>
-              <button type="submit" className="w-full py-4 bg-blue-600 text-white text-lg rounded-xl shadow-md hover:bg-blue-700 transition">Next</button>
-            </form>
-          ) : !sessionStarted ? (
-            <button className="w-full py-4 bg-green-600 text-white text-lg rounded-xl shadow-md hover:bg-green-700 transition" onClick={handleStart}>Start Exam</button>
-          ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
-            renderReport()
-          ) : (
-            <div className="w-full">
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div>
-                  <div className="text-sm font-semibold">✅ Answering Completion: {progressValue.toFixed(1)}%</div>
-                  <progress value={progressValue} max="100" className="w-full h-2" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">⏱️ Time Efficiency: {timeProgress.toFixed(1)}%</div>
-                  <progress value={timeProgress} max="100" className="w-full h-2 bg-red-100" />
-                </div>
-              </div>
-              <div className="text-md font-semibold mb-2">⏰ Time Left: {timeLeft}s</div>
-              <div className="text-md mb-4">📝 Question: {currentQuestion} / {totalQuestions}</div>
-              <button className="w-full py-4 bg-indigo-600 text-white text-lg rounded-xl shadow-md hover:bg-indigo-700 transition" onClick={handleNextQuestion}>Next Question</button>
+    <div className="p-6 max-w-sm mx-auto min-h-screen flex flex-col justify-center items-center bg-gray-100 text-center rounded-3xl shadow-2xl border border-gray-300">
+      <h1 className="text-2xl font-bold mb-6 text-blue-600">📘 Exam Timer</h1>
+      {!settingsSubmitted ? (
+        <form className="space-y-4 w-full" onSubmit={handleSettingsSubmit}>
+          <input
+            type="number"
+            min="1"
+            className="w-full p-4 border rounded-xl text-lg text-center shadow-inner"
+            value={totalTime / 60}
+            onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
+            placeholder="Total Time (mins)"
+            required
+          />
+          <input
+            type="number"
+            min="1"
+            className="w-full p-4 border rounded-xl text-lg text-center shadow-inner"
+            value={totalQuestions}
+            onChange={(e) => setTotalQuestions(Number(e.target.value))}
+            placeholder="Total Questions"
+            required
+          />
+          <button type="submit" className="w-full py-4 bg-blue-500 text-white text-xl font-semibold rounded-xl shadow hover:bg-blue-600 transition">Next</button>
+        </form>
+      ) : !sessionStarted ? (
+        <button className="w-full py-5 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow-lg hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
+      ) : timeLeft <= 0 || currentQuestion > totalQuestions ? (
+        renderReport()
+      ) : (
+        <div className="w-full">
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div>
+              <div className="text-sm font-semibold">✅ Completion: {progressValue.toFixed(1)}%</div>
+              <progress value={progressValue} max="100" className="w-full h-2" />
             </div>
-          )}
+            <div>
+              <div className="text-sm font-semibold">⏱️ Efficiency: {timeProgress.toFixed(1)}%</div>
+              <progress value={timeProgress} max="100" className="w-full h-2 bg-red-100" />
+            </div>
+          </div>
+          <div className="text-md font-semibold mb-2">⏰ {timeLeft}s left</div>
+          <div className="text-md mb-4">📝 Question {currentQuestion} / {totalQuestions}</div>
+          <button className="w-full py-5 bg-indigo-600 text-white text-2xl font-semibold rounded-xl shadow-lg hover:bg-indigo-700 transition" onClick={handleNextQuestion}>Next Question</button>
         </div>
-        <div className="w-full sm:w-1/3">
-          <h3 className="text-md font-bold mb-2">⏱ Question Log</h3>
-          <table className="w-full text-left border">
+      )}
+      <div className="mt-6 w-full">
+        <h3 className="text-md font-bold mb-2">⏱ Log</h3>
+        <div className="bg-white rounded-lg p-2 shadow-sm max-h-64 overflow-auto border">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-200">
-                <th className="p-2 text-sm">Question</th>
-                <th className="p-2 text-sm">Time</th>
+              <tr className="text-gray-500 text-sm">
+                <th className="p-1">Q</th>
+                <th className="p-1">Time</th>
               </tr>
             </thead>
             <tbody>
               {questionLogs.map((log, index) => {
                 const [label, time] = log.split(" - ");
                 return (
-                  <tr key={index}>
-                    <td className="p-2 text-sm">{label}</td>
-                    <td className="p-2 text-sm">{time}</td>
+                  <tr key={index} className="text-sm">
+                    <td className="p-1">{label}</td>
+                    <td className="p-1">{time}</td>
                   </tr>
                 );
               })}
