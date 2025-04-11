@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 
 export default function ExamTimerApp() {
   const [totalQuestions, setTotalQuestions] = useState(10);
@@ -68,6 +69,17 @@ export default function ExamTimerApp() {
     setSettingsSubmitted(true);
   };
 
+  const handleDownload = () => {
+    const data = questionTimes.map((time, index) => ({
+      Question: `Q${index + 1}`,
+      Time: formatTime(time),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Log");
+    XLSX.writeFile(workbook, `${userName || "Exam"}_Timing_Log.xlsx`);
+  };
+
   const renderReport = () => (
     <div className="text-center w-full">
       <h2 className="text-lg font-bold mb-2">Session Report</h2>
@@ -84,6 +96,12 @@ export default function ExamTimerApp() {
           rows={totalQuestions + 1}
           className="w-full mt-2 p-2 border rounded text-sm"
         />
+        <button
+          onClick={handleDownload}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+        >
+          📥 Download Excel Log
+        </button>
       </div>
     </div>
   );
