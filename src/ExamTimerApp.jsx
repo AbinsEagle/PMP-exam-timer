@@ -84,6 +84,18 @@ export default function ExamTimerApp() {
     XLSX.writeFile(workbook, `${userName || "Exam"}_Timing_Log.xlsx`);
   };
 
+  const renderLiveLog = () => (
+    <div className="mt-4 w-full">
+      <h3 className="text-md font-semibold">Live Question Log</h3>
+      <textarea
+        readOnly
+        value={questionLogs.join("\n")}
+        rows={questionLogs.length + 1}
+        className="w-full mt-2 p-2 border rounded text-sm"
+      />
+    </div>
+  );
+
   const renderReport = () => (
     <div className="text-center w-full">
       <h2 className="text-lg font-bold mb-2">Session Report</h2>
@@ -160,15 +172,7 @@ export default function ExamTimerApp() {
         ) : !sessionStarted ? (
           <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
         ) : timeLeft <= 0 || examFinished ? (
-          <>
-            {renderReport()}
-            <button
-              onClick={handleDownload}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-            >
-              📥 Download Excel Log
-            </button>
-          </>
+          renderReport()
         ) : (
           <div className="w-full text-center">
             <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
@@ -184,6 +188,7 @@ export default function ExamTimerApp() {
             <div className="text-5xl font-bold text-gray-800 mb-2">⏰ {timeLeft}s</div>
             <div className="text-sm text-gray-600 mb-4">📝 Q{currentQuestion} of {totalQuestions}</div>
             <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>{currentQuestion === totalQuestions ? "Finish" : "Next Question"}</button>
+            {renderLiveLog()}
           </div>
         )}
       </div>
