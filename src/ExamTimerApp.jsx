@@ -13,6 +13,7 @@ export default function ExamTimerApp() {
   const [questionLogs, setQuestionLogs] = useState([]);
   const [userName, setUserName] = useState("");
   const [examFinished, setExamFinished] = useState(false);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
 
   useEffect(() => {
     setTimeLeft(totalTime);
@@ -33,6 +34,7 @@ export default function ExamTimerApp() {
           updated[currentQuestion - 1] += 1;
           return updated;
         });
+        setQuestionTimeLeft((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(timer);
@@ -59,6 +61,7 @@ export default function ExamTimerApp() {
     }
     if (currentQuestion < totalQuestions) {
       setCurrentQuestion(currentQuestion + 1);
+      setQuestionTimeLeft(0);
     } else {
       setExamFinished(true);
     }
@@ -66,6 +69,7 @@ export default function ExamTimerApp() {
 
   const handleStart = () => {
     setSessionStarted(true);
+    setQuestionTimeLeft(0);
   };
 
   const handleSettingsSubmit = (e) => {
@@ -93,32 +97,6 @@ export default function ExamTimerApp() {
         rows={questionLogs.length + 1}
         className="w-full mt-2 p-2 border rounded text-sm"
       />
-    </div>
-  );
-
-  const renderReport = () => (
-    <div className="text-center w-full">
-      <h2 className="text-lg font-bold mb-2">Session Report</h2>
-      <ul className="list-inside">
-        {questionLogs.map((log, idx) => (
-          <li key={idx} className="text-sm">{log}</li>
-        ))}
-      </ul>
-      <div className="mt-4">
-        <h3 className="text-md font-semibold">Detailed Log</h3>
-        <textarea
-          readOnly
-          value={questionLogs.join("\n")}
-          rows={questionLogs.length + 1}
-          className="w-full mt-2 p-2 border rounded text-sm"
-        />
-        <button
-          onClick={handleDownload}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-        >
-          📥 Download Excel Log
-        </button>
-      </div>
     </div>
   );
 
@@ -172,7 +150,22 @@ export default function ExamTimerApp() {
         ) : !sessionStarted ? (
           <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
         ) : timeLeft <= 0 || examFinished ? (
-          renderReport()
+          <div className="text-center w-full">
+            <div className="mt-4">
+              <textarea
+                readOnly
+                value={questionLogs.join("\n")}
+                rows={questionLogs.length + 1}
+                className="w-full mt-2 p-2 border rounded text-sm"
+              />
+              <button
+                onClick={handleDownload}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                📥 Download Excel Log
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="w-full text-center">
             <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
@@ -185,7 +178,8 @@ export default function ExamTimerApp() {
                 <progress value={timeProgress} max="100" className="w-full h-2" />
               </div>
             </div>
-            <div className="text-5xl font-bold text-gray-800 mb-2">⏰ {timeLeft}s</div>
+            <div className="text-3xl font-bold text-red-600 mb-1">🕒 Q-Time: {formatTime(questionTimeLeft)}</div>
+            <div className="text-2xl font-bold text-gray-800 mb-1">⏰ Total: {timeLeft}s</div>
             <div className="text-sm text-gray-600 mb-4">📝 Q{currentQuestion} of {totalQuestions}</div>
             <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>{currentQuestion === totalQuestions ? "Finish" : "Next Question"}</button>
             {renderLiveLog()}
