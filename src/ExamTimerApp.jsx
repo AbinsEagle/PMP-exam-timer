@@ -87,6 +87,11 @@ export default function ExamTimerApp() {
     setQuestionTimeLeft(0);
   };
 
+  const handleBackToSettings = () => {
+    setSettingsSubmitted(false);
+    setSessionStarted(false);
+  };
+
   const handleSettingsSubmit = (e) => {
     e.preventDefault();
     setSettingsSubmitted(true);
@@ -123,6 +128,7 @@ export default function ExamTimerApp() {
       <div className="w-full max-w-md bg-white border-2 border-gray-300 rounded-3xl shadow-2xl p-4 flex flex-col items-center font-sans">
         <h1 className="text-xl text-gray-800 font-semibold mb-1">PMP Exam Timing Buddy</h1>
         <h1 className="text-4xl text-blue-600 font-bold mb-4">📘</h1>
+
         {!settingsSubmitted ? (
           <form className="space-y-3 w-full" onSubmit={handleSettingsSubmit}>
             <div>
@@ -165,7 +171,7 @@ export default function ExamTimerApp() {
         ) : !sessionStarted ? (
           <>
             <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
-            <button className="w-full py-2 bg-gray-300 text-gray-800 text-sm rounded-xl hover:bg-gray-400 transition" onClick={handleReset}>🔄 Reset</button>
+            <button className="w-full py-2 bg-gray-300 text-gray-800 text-sm rounded-xl hover:bg-gray-400 transition" onClick={handleBackToSettings}>🔙 Back</button>
           </>
         ) : timeLeft <= 0 || examFinished ? (
           <div className="text-center w-full">
@@ -176,18 +182,8 @@ export default function ExamTimerApp() {
                 rows={questionLogs.length + 1}
                 className="w-full mt-2 p-2 border rounded text-sm"
               />
-              <button
-                onClick={handleDownload}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-              >
-                📥 Download Excel Log
-              </button>
-              <button
-                onClick={handleReset}
-                className="mt-4 px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-              >
-                🔙 Back to Home
-              </button>
+              <button onClick={handleDownload} className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">📥 Download Excel Log</button>
+              <button onClick={handleReset} className="mt-4 px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600">🔙 Back to Home</button>
             </div>
           </div>
         ) : (
@@ -214,3 +210,4 @@ export default function ExamTimerApp() {
     </div>
   );
 }
+
