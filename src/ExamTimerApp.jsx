@@ -127,6 +127,10 @@ export default function ExamTimerApp() {
             renderReport()
           ) : (
             <div className="w-full">
+              <div className="mb-2">
+                <div className="text-sm font-semibold">✅ Answering Completion: {progressValue.toFixed(1)}%</div>
+                <div className="text-sm font-semibold">⏱️ Time Efficiency: {timeProgress.toFixed(1)}%</div>
+              </div>
               <progress value={progressValue} max="100" className="w-full mb-2 h-3" />
               <progress value={timeProgress} max="100" className="w-full mb-4 h-2 bg-red-100" />
               <div className="text-md font-semibold mb-2">⏰ Time Left: {timeLeft}s</div>
