@@ -132,13 +132,13 @@ export default function ExamTimerApp() {
         </p>
 
         {stage === "loading" && (
-          <div className="text-center text-lg font-semibold text-gray-600 p-4">
+          <div className="text-center text-lg font-semibold text-gray-600 p-4 animate-pulse">
             🧞 Loading your questions from the PMP Genie...
           </div>
         )}
 
         {stage === "ready" && (
-          <div className="text-center mt-4 space-y-4">
+          <div className="text-center mt-4 space-y-4 animate-fade-in">
             <p className="text-green-700 font-medium text-lg">🚀 You’re all set, {userName}! Let’s begin your PMP challenge.</p>
             <button
               onClick={handleStartExam}
