@@ -1,48 +1,46 @@
-const express = require("express");
-const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+import express from "express";
+import cors from "cors";
+import { Configuration, OpenAIApi } from "openai";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const configuration = new Configuration({
-  apiKey: "sk-REPLACE_WITH_YOUR_OPENAI_KEY" // Replace this with your actual key
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
 app.post("/generate-questions", async (req, res) => {
   const prompt = `
-Generate 10 PMP exam questions with 4 options (A-D) and the correct answer.
-Return in this JSON format:
+Generate ${req.body.count || 10} PMP exam questions. Return as JSON:
 [
   {
-    "question": "....",
-    "options": {
-      "A": "...",
-      "B": "...",
-      "C": "...",
-      "D": "..."
-    },
+    "question": "...",
+    "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
     "answer": "B"
   }
 ]
 `;
 
   try {
-    const response = await openai.createChatCompletion({
+    const chat = await openai.createChatCompletion({
       model: "gpt-4",
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7
     });
 
-    const content = response.data.choices[0].message.content;
-    const json = JSON.parse(content);
-    res.json(json);
+    const content = chat.data.choices[0].message.content;
+    const questions = JSON.parse(content);
+    res.json(questions);
   } catch (err) {
-    console.error(\"OpenAI Error:\", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("OpenAI Error:", err.message);
+    res.status(500).json({ error: "Failed to generate questions" });
   }
 });
 
-app.listen(5000, () => console.log(\"🔥 Backend running at http://localhost:5000\"));
-
+app.listen(5000, () => {
+  console.log("✅ Backend running on http://localhost:5000");
+});
