@@ -185,7 +185,43 @@ export default function ExamTimerApp() {
             </button>
           </form>
         )}
+
+        {stage === "exam" && questions.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600">⏱ Time Left: {formatTime(timeLeft)}</div>
+              <div className="text-sm text-gray-600">📍 Question {currentQuestionIndex + 1} of {totalQuestions}</div>
+            </div>
+            <div className="text-sm text-blue-700">⌛ Time on this question: {formatTime(questionTime)}</div>
+            <div className="mt-4">
+              <p className="font-semibold mb-2">Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex].question}</p>
+              {questions[currentQuestionIndex].options.map((opt, idx) => (
+                <div key={idx} className="mb-2">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="option"
+                      value={opt}
+                      checked={selectedOption === opt}
+                      onChange={() => setSelectedOption(opt)}
+                      className="mr-2"
+                    />
+                    {String.fromCharCode(65 + idx)}. {opt}
+                  </label>
+                </div>
+              ))}
+              <button
+                onClick={handleNext}
+                disabled={!selectedOption}
+                className="mt-4 w-full py-3 bg-purple-600 text-white rounded-xl disabled:opacity-50"
+              >
+                Next Question
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
