@@ -1,44 +1,48 @@
-const express = require("express");
-const cors = require("cors");
-const OpenAI = require("openai");
+// server.js (your backend)
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { OpenAI } from 'openai';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-app.post("/generate-questions", async (req, res) => {
-  const count = req.body.count || 10;
-  const prompt = `
-Generate ${count} PMP exam questions with 4 options (A-D) and the correct answer.
-Return in JSON format like:
-[
-  {
-    "question": "...",
-    "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-    "answer": "B"
+app.post('/generate-questions', async (req, res) => {
+  const { count } = req.body;
+
+  if (!count || typeof count !== 'number') {
+    return res.status(400).json({ error: 'Invalid count provided.' });
   }
-]
-`;
 
   try {
-    const chat = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a PMP exam question generator. Generate ONLY JSON with no explanation. Format: [{"question":"...","options":["A","B","C","D"],"answer":"A"}]'
+        },
+        {
+          role: 'user',
+          content: `Generate ${count} PMP exam questions in JSON array format.`
+        }
+      ],
+      temperature: 0.7
     });
 
-    const content = chat.choices[0].message.content;
-    const data = JSON.parse(content);
-    res.json(data);
+    const content = completion.choices[0].message.content;
+    const questions = JSON.parse(content);
+    res.json(questions);
   } catch (err) {
-    console.error("OpenAI Error:", err.message);
-    res.status(500).json({ error: "Failed to generate questions" });
+    console.error('OpenAI Error:', err);
+    res.status(500).json({ error: 'Failed to generate questions from OpenAI' });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server ready on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
