@@ -29,7 +29,7 @@ export default function ExamTimerApp() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [stage]);
+  }, [stage, timeLeft]);
 
   const formatTime = (sec) => `${Math.floor(sec / 60)}m ${sec % 60}s`;
 
@@ -81,7 +81,7 @@ export default function ExamTimerApp() {
         time: questionTime,
         correct: isCorrect,
         question: currentQ.question,
-        answer: currentQ.answer
+        answer: currentQ.answer,
       },
     }));
 
@@ -94,7 +94,23 @@ export default function ExamTimerApp() {
     }
   };
 
-  const handleAutoSubmit = () => setStage("result");
+  const handleAutoSubmit = () => {
+    const currentQ = questions[currentQuestionIndex];
+    const isCorrect = selectedOption === currentQ.answer;
+
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [currentQuestionIndex]: {
+        selected: selectedOption,
+        time: questionTime,
+        correct: isCorrect,
+        question: currentQ.question,
+        answer: currentQ.answer,
+      },
+    }));
+
+    setStage("result");
+  };
 
   const handleRestart = () => {
     setUserName("");
@@ -238,7 +254,7 @@ export default function ExamTimerApp() {
           </div>
         )}
 
-        {stage === "result" && (
+        {stage === "result" && Object.keys(selectedAnswers).length > 0 && (
           <div className="text-center space-y-4 animate-fade-in">
             <h2 className="text-xl font-bold text-green-700">🎉 Well done, {userName}!</h2>
             <p className="text-gray-700">You completed the PMP practice with a score of <strong>{score}</strong> out of <strong>{totalQuestions}</strong>.</p>
