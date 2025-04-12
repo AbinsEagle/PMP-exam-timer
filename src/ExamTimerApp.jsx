@@ -41,7 +41,7 @@ export default function ExamTimerApp() {
     setTotalTime(calculatedTime);
     setStage("loading");
     try {
-      const res = await fetch("https://your-api-url/generate-questions", {
+      const res = await fetch("https://a1ea6cd7-bd69-4579-b692-2328e770da4d-00-3p6mys6ltun7m.pike.replit.dev/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ count: totalQuestions }),
