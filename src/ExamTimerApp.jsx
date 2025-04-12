@@ -40,7 +40,7 @@ export default function ExamTimerApp() {
       const res = await fetch("https://pmp-exam-trainer.onrender.com/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: totalQuestions })
+        body: JSON.stringify({ count: totalQuestions }),
       });
       const data = await res.json();
       const questionSet = data.slice(0, totalQuestions).map((q, i) => ({
@@ -92,9 +92,7 @@ export default function ExamTimerApp() {
     }
   };
 
-  const handleAutoSubmit = () => {
-    setStage("result");
-  };
+  const handleAutoSubmit = () => setStage("result");
 
   const handleRestart = () => {
     setUserName("");
@@ -222,6 +220,23 @@ export default function ExamTimerApp() {
                 {currentQuestionIndex + 1 === totalQuestions ? "Finish Exam" : "Next Question"}
               </button>
             </div>
+
+            {/* ✅ Real-Time Log */}
+            {Object.keys(selectedAnswers).length > 0 && (
+              <div className="mt-6 p-4 border rounded-md bg-gray-50">
+                <h3 className="font-bold mb-2 text-gray-700">🧾 Real-Time Log</h3>
+                <ul className="text-sm space-y-1 text-gray-600 max-h-48 overflow-y-auto">
+                  {Object.entries(selectedAnswers).map(([index, ans]) => (
+                    <li key={index}>
+                      <strong>Q{Number(index) + 1}:</strong> {formatTime(ans.time)} – <em>{ans.selected}</em>{" "}
+                      <span className={`ml-2 font-semibold ${ans.correct ? "text-green-600" : "text-red-500"}`}>
+                        {ans.correct ? "✔ Correct" : "✘ Wrong"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -233,7 +248,6 @@ export default function ExamTimerApp() {
             <button onClick={handleRestart} className="block w-full mt-4 px-4 py-2 border text-sm rounded-md hover:bg-gray-100">🔁 Start Over</button>
           </div>
         )}
-
       </div>
     </div>
   );
