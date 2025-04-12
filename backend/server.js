@@ -5,6 +5,11 @@ import { OpenAI } from "openai";
 
 dotenv.config();
 
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ OPENAI_API_KEY is missing in environment variables.");
+  process.exit(1);
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -53,12 +58,12 @@ Respond ONLY in this JSON format:
 
     const content = completion.choices[0].message.content;
 
-    // Safely try to parse GPT response
     let parsed;
     try {
       parsed = JSON.parse(content);
     } catch (err) {
       console.error("❌ JSON Parse Error:", err.message);
+      console.log("Raw GPT Response:", content); // Add this for debugging
       return res.status(500).json({ error: "Invalid response format from GPT." });
     }
 
@@ -69,6 +74,7 @@ Respond ONLY in this JSON format:
   }
 });
 
-app.listen(3000, () => {
-  console.log("🚀 PMP backend server running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 PMP backend server running on port ${PORT}`);
 });
