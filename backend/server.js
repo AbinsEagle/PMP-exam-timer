@@ -49,6 +49,8 @@ Each question must:
 - Use official PMI language and tone
 - Include 4 distinct options (A, B, C, D)
 - Mark exactly one correct answer
+- Include rationale for why the correct option is best
+- Include the ECO task reference the question addresses
 
 Respond with a JSON array in this format:
 
@@ -61,12 +63,13 @@ Respond with a JSON array in this format:
       "C. Review the scope management plan",
       "D. Initiate change control"
     ],
-    "answer": "C"
+    "answer": "C",
+    "rationale": "Reviewing the scope management plan helps validate if the concern is a deviation or expected.",
+    "eco_task": "People - Task 8: Engage stakeholders by leading..."
   }
 ]
 
-Only return the JSON array. Do not include any extra commentary or formatting.
-`;
+Only return the JSON array. Do not include any extra commentary or formatting.`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
