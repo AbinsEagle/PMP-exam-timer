@@ -51,6 +51,14 @@ export default function ExamTimerApp() {
     }
   };
 
+  const handleQuestionChange = (e) => {
+    const num = Number(e.target.value);
+    setTotalQuestions(num);
+    const timePerQuestion = (230 / 180); // Real PMP: 180 Qs in 230 minutes
+    const estimatedTime = Math.ceil(num * timePerQuestion);
+    setTotalTime(estimatedTime * 60); // convert to seconds
+  };
+
   const handleStartExam = () => {
     setStage("exam");
     setQuestionTime(0);
@@ -100,34 +108,32 @@ export default function ExamTimerApp() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
-        <h1 className="text-2xl font-bold text-center mb-4 text-blue-700">🧠 PMP Exam Timer</h1>
+        <h1 className="text-2xl font-bold text-center mb-4 text-blue-700">🧠 PMP Exam Trainer</h1>
 
         {stage === "input" && (
           <form onSubmit={handleSettingsSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Your name"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="Total time in minutes"
-              value={totalTime / 60}
-              onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
-              required
-              className="w-full p-3 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="Number of questions"
-              value={totalQuestions}
-              onChange={(e) => setTotalQuestions(Number(e.target.value))}
-              required
-              className="w-full p-3 border rounded-lg"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">👤 Your Name</label>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">📝 How many questions do you want to practice?</label>
+              <input
+                type="number"
+                placeholder="Number of questions"
+                value={totalQuestions}
+                onChange={handleQuestionChange}
+                required
+                className="w-full p-3 border rounded-lg"
+              />
+            </div>
             <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl">
               Generate Questions
             </button>
