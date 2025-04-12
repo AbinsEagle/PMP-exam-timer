@@ -40,22 +40,40 @@ app.post("/generate-questions", async (req, res) => {
     for (const req of domainRequests) {
       if (req.count <= 0) continue;
 
-      const prompt = `Generate ${req.count} PMP exam-style multiple choice questions strictly based on the '${req.domain}' domain as defined in the PMI Examination Content Outline (ECO). Each question should be JSON formatted as:
+      const prompt = `
+You are a PMP exam question generator. Create ${req.count} unique and realistic PMP multiple-choice questions based on the '${req.domain}' domain as defined in the PMI Examination Content Outline (2021).
+
+Each question must:
+- Focus only on '${req.domain}' tasks from the ECO
+- Be situational and decision-based, not factual recall
+- Use official PMI language and tone
+- Include 4 distinct options (A, B, C, D)
+- Mark exactly one correct answer
+
+Respond with a JSON array in this format:
 
 [
   {
-    "question": "...",
-    "options": ["A...", "B...", "C...", "D..."],
-    "answer": "B"
+    "question": "What should the project manager do FIRST when a stakeholder reports a scope concern?",
+    "options": [
+      "A. Update the risk register",
+      "B. Consult the stakeholder register",
+      "C. Review the scope management plan",
+      "D. Initiate change control"
+    ],
+    "answer": "C"
   }
-]`;
+]
+
+Only return the JSON array. Do not include any extra commentary or formatting.
+`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: "You are a certified PMP exam trainer AI that strictly follows the latest ECO guideline.",
+            content: "You are a certified PMP exam simulator that strictly follows the official PMI ECO document.",
           },
           {
             role: "user",
