@@ -109,29 +109,29 @@ export default function ExamTimerApp() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+    <div className="p-4 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
       {stage === "input" && (
         <form onSubmit={handleSettingsSubmit} className="space-y-4">
-          <h1 className="text-2xl font-bold text-center">
+          <h1 className="text-3xl font-bold text-center text-blue-800">
             📊 PMP Exam Trainer
           </h1>
-          <p className="italic text-center text-gray-600">
+          <p className="italic text-center text-gray-600 text-sm">
             📘 PMP Insight: You get 230 minutes to answer 180 questions. That's about 1.28 minutes per question. ⏳
           </p>
           <input
             type="text"
-            placeholder="Enter your name"
+            placeholder="Your Name"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded"
             required
           />
           <input
             type="number"
-            placeholder="How many questions you want to practice?"
+            placeholder="Number of questions you want to practice"
             value={totalQuestions}
             onChange={(e) => setTotalQuestions(Number(e.target.value))}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded"
             required
           />
           <button
@@ -145,7 +145,7 @@ export default function ExamTimerApp() {
 
       {stage === "ready" && (
         <div className="text-center">
-          <p className="text-lg font-semibold">Questions ready!</p>
+          <p className="text-lg font-semibold">✅ Questions are ready!</p>
           <p className="text-sm text-gray-500">Estimated Time: {formatTime(estimatedTime)}</p>
           <button
             onClick={handleStartExam}
@@ -158,11 +158,12 @@ export default function ExamTimerApp() {
 
       {stage === "exam" && questions.length > 0 && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-center text-xs text-gray-600">
             <span>⏰ Time Left: {formatTime(timeLeft)}</span>
             <span>📍 Question {currentQuestionIndex + 1} of {totalQuestions}</span>
             <span>⏳ Time on this question: {formatTime(questionTime)}</span>
           </div>
+
           <div className="p-4 border rounded bg-gray-50">
             <p className="font-semibold">
               Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex].question}
@@ -189,6 +190,7 @@ export default function ExamTimerApp() {
               </div>
             ))}
           </div>
+
           <button
             onClick={handleNext}
             disabled={!selectedOption}
@@ -196,10 +198,11 @@ export default function ExamTimerApp() {
           >
             {currentQuestionIndex + 1 === totalQuestions ? "Finish Exam" : "Next Question"}
           </button>
+
           <div className="text-sm mt-4">
             <strong>🧾 Real-Time Log</strong>
             <ul className="list-disc pl-4">
-              {Object.entries(selectedAnswers).map(([key, val], idx) => (
+              {Object.entries(selectedAnswers).map(([key, val]) => (
                 <li key={key}>
                   Q{Number(key) + 1}: {formatTime(val.time)} – {val.selected} {val.selected === val.answer ? "✔ Correct" : "❌ Wrong"}
                 </li>
