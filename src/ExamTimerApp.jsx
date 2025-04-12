@@ -1,212 +1,129 @@
 import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
 
 export default function ExamTimerApp() {
-  const [totalQuestions, setTotalQuestions] = useState(10);
-  const [totalTime, setTotalTime] = useState(600);
-  const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(totalTime);
-  const [questionTimes, setQuestionTimes] = useState(Array(totalQuestions).fill(0));
+  const [totalTime, setTotalTime] = useState(600); // total exam time
+  const [timeLeft, setTimeLeft] = useState(600);
+  const [questionTime, setQuestionTime] = useState(0);
   const [sessionStarted, setSessionStarted] = useState(false);
-  const [settingsSubmitted, setSettingsSubmitted] = useState(false);
-  const [playAlert, setPlayAlert] = useState(false);
-  const [questionLogs, setQuestionLogs] = useState([]);
-  const [userName, setUserName] = useState("");
   const [examFinished, setExamFinished] = useState(false);
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState("");
 
-  useEffect(() => {
-    setTimeLeft(totalTime);
-    setQuestionTimes(Array(totalQuestions).fill(0));
-  }, [totalQuestions, totalTime]);
+  const sampleQuestion = {
+    question: "You are working with a cross-functional Agile team on a product release. Midway through the sprint, a stakeholder approaches you requesting a critical feature update. What should you do?",
+    options: {
+      A: "Pause the sprint and implement the change immediately.",
+      B: "Log the request and defer discussion to the next sprint planning session.",
+      C: "Update the sprint backlog and inform the team.",
+      D: "Add the change to the current sprint and assign it to the most available developer."
+    },
+    answer: "B"
+  };
 
   useEffect(() => {
     let timer;
-    if (sessionStarted && timeLeft > 0 && !examFinished) {
+    if (sessionStarted && !examFinished) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          const newTime = prev - 1;
-          if (newTime === 10) setPlayAlert(true);
-          return newTime;
-        });
-        setQuestionTimes((prev) => {
-          const updated = [...prev];
-          updated[currentQuestion - 1] += 1;
-          return updated;
-        });
-        setQuestionTimeLeft((prev) => prev + 1);
+        setTimeLeft((prev) => prev - 1);
+        setQuestionTime((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [sessionStarted, currentQuestion, timeLeft, examFinished]);
+  }, [sessionStarted, examFinished]);
 
-  useEffect(() => {
-    if (playAlert) {
-      const audio = new Audio("/alert.mp3");
-      audio.play();
-      setPlayAlert(false);
-    }
-  }, [playAlert]);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins > 0 ? mins + 'm ' : ''}${secs}s`;
-  };
-
-  const handleNextQuestion = () => {
-    if (currentQuestion <= totalQuestions) {
-      const log = `Q${currentQuestion} - ${formatTime(questionTimes[currentQuestion - 1])}`;
-      setQuestionLogs((prev) => [...prev, log]);
-    }
-    if (currentQuestion < totalQuestions) {
-      setCurrentQuestion(currentQuestion + 1);
-      setQuestionTimeLeft(0);
-    } else {
-      setExamFinished(true);
-    }
+  const formatTime = (sec) => {
+    const min = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${min}m ${s}s`;
   };
 
   const handleStart = () => {
     setSessionStarted(true);
-    setQuestionTimeLeft(0);
+    setTimeLeft(totalTime);
+    setQuestionTime(0);
+  };
+
+  const handleNext = () => {
+    setExamFinished(true); // for now just finish
   };
 
   const handleReset = () => {
-    setTotalQuestions(10);
-    setTotalTime(600);
-    setCurrentQuestion(1);
-    setTimeLeft(600);
-    setQuestionTimes(Array(10).fill(0));
     setSessionStarted(false);
-    setSettingsSubmitted(false);
-    setPlayAlert(false);
-    setQuestionLogs([]);
-    setUserName("");
     setExamFinished(false);
-    setQuestionTimeLeft(0);
+    setTimeLeft(totalTime);
+    setQuestionTime(0);
+    setSelectedAnswer("");
   };
-
-  const handleBackToSettings = () => {
-    setSettingsSubmitted(false);
-    setSessionStarted(false);
-  };
-
-  const handleSettingsSubmit = (e) => {
-    e.preventDefault();
-    setSettingsSubmitted(true);
-  };
-
-  const handleDownload = () => {
-    const data = questionLogs.map((log) => {
-      const [question, time] = log.split(" - ");
-      return { Question: question, Time: time };
-    });
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Log");
-    XLSX.writeFile(workbook, `${userName || "Exam"}_Timing_Log.xlsx`);
-  };
-
-  const renderLiveLog = () => (
-    <div className="mt-4 w-full">
-      <h3 className="text-md font-semibold">Live Question Log</h3>
-      <textarea
-        readOnly
-        value={questionLogs.join("\n")}
-        rows={questionLogs.length + 1}
-        className="w-full mt-2 p-2 border rounded text-sm"
-      />
-    </div>
-  );
-
-  const progressValue = (currentQuestion - 1) / totalQuestions * 100;
-  const timeProgress = (totalTime - timeLeft) / totalTime * 100;
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white border-2 border-gray-300 rounded-3xl shadow-2xl p-4 flex flex-col items-center font-sans">
-        <h1 className="text-xl text-gray-800 font-semibold mb-1">PMP Exam Timing Buddy</h1>
-        <h1 className="text-4xl text-blue-600 font-bold mb-4">📘</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
+        <h1 className="text-2xl font-bold text-center mb-4 text-blue-700">🧠 PMP Exam Timer</h1>
 
-        {!settingsSubmitted ? (
-          <form className="space-y-3 w-full" onSubmit={handleSettingsSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">🙋‍♂️ Your Name</label>
-              <input
-                type="text"
-                className="w-full p-3 border rounded-lg text-center text-base"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="Enter your name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">⏳ Total Time (mins)</label>
-              <input
-                type="number"
-                min="1"
-                className="w-full p-3 border rounded-lg text-center text-base"
-                value={totalTime / 60}
-                onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
-                placeholder="Total Time (mins)"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">❓ Total Questions</label>
-              <input
-                type="number"
-                min="1"
-                className="w-full p-3 border rounded-lg text-center text-base"
-                value={totalQuestions}
-                onChange={(e) => setTotalQuestions(Number(e.target.value))}
-                placeholder="Total Questions"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full py-3 bg-blue-500 text-white text-xl rounded-xl hover:bg-blue-600 transition">Next</button>
-          </form>
-        ) : !sessionStarted ? (
-          <>
-            <button className="w-full py-4 bg-green-500 text-white text-2xl font-semibold rounded-xl shadow hover:bg-green-600 transition mb-4" onClick={handleStart}>Start Exam</button>
-            <button className="w-full py-2 bg-gray-300 text-gray-800 text-sm rounded-xl hover:bg-gray-400 transition" onClick={handleBackToSettings}>🔙 Back</button>
-          </>
-        ) : timeLeft <= 0 || examFinished ? (
-          <div className="text-center w-full">
-            <div className="mt-4">
-              <textarea
-                readOnly
-                value={questionLogs.join("\n")}
-                rows={questionLogs.length + 1}
-                className="w-full mt-2 p-2 border rounded text-sm"
-              />
-              <button onClick={handleDownload} className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">📥 Download Excel Log</button>
-              <button onClick={handleReset} className="mt-4 px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600">🔙 Back to Home</button>
-            </div>
+        {!sessionStarted ? (
+          <button
+            onClick={handleStart}
+            className="w-full py-4 bg-green-500 text-white rounded-xl text-xl hover:bg-green-600"
+          >
+            ▶️ Start Exam
+          </button>
+        ) : examFinished ? (
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-green-700">🎉 Exam Finished</h2>
+            <p className="mt-2">Total Time: {formatTime(totalTime - timeLeft)}</p>
+            <p>Question Time: {formatTime(questionTime)}</p>
+            <p className="mt-2">
+              Your answer: <strong>{selectedAnswer || "None"}</strong>
+              <br />
+              Correct answer: <strong>{sampleQuestion.answer}</strong>
+            </p>
+            <button
+              onClick={handleReset}
+              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              🔁 Back to Start
+            </button>
           </div>
         ) : (
-          <div className="w-full text-center">
-            <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-              <div>
-                <div className="mb-1 font-semibold">✅ {progressValue.toFixed(0)}% Complete</div>
-                <progress value={progressValue} max="100" className="w-full h-2" />
-              </div>
-              <div>
-                <div className="mb-1 font-semibold">⏱ {timeProgress.toFixed(0)}% Used</div>
-                <progress value={timeProgress} max="100" className="w-full h-2" />
-              </div>
+          <div>
+            <div className="mb-4 text-center">
+              <p className="text-sm text-gray-600">🕒 Question Time: {formatTime(questionTime)}</p>
+              <p className="text-sm text-gray-600">⏰ Total Time Left: {formatTime(timeLeft)}</p>
             </div>
-            <div className="text-3xl font-bold text-red-600 mb-1">🕒 Q-Time: {formatTime(questionTimeLeft)}</div>
-            <div className="text-2xl font-bold text-gray-800 mb-1">⏰ Total: {timeLeft}s</div>
-            <div className="text-sm text-gray-600 mb-4">📝 Q{currentQuestion} of {totalQuestions}</div>
-            <button className="w-full py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl hover:bg-indigo-700 transition" onClick={handleNextQuestion}>{currentQuestion === totalQuestions ? "Finish" : "Next Question"}</button>
-            <button className="mt-2 px-4 py-2 bg-gray-300 text-gray-800 text-sm rounded hover:bg-gray-400 transition" onClick={handleReset}>🔄 Reset</button>
-            {renderLiveLog()}
+
+            <div className="bg-gray-50 p-4 rounded-xl border mb-4">
+              <h2 className="text-md font-semibold mb-2">{sampleQuestion.question}</h2>
+              {Object.entries(sampleQuestion.options).map(([key, val]) => (
+                <label key={key} className="block mb-2">
+                  <input
+                    type="radio"
+                    name="option"
+                    value={key}
+                    checked={selectedAnswer === key}
+                    onChange={(e) => setSelectedAnswer(e.target.value)}
+                    className="mr-2"
+                  />
+                  <strong>{key}.</strong> {val}
+                </label>
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              className="w-full py-3 bg-indigo-600 text-white text-xl rounded-xl hover:bg-indigo-700"
+            >
+              {examFinished ? "Finish" : "Next Question"}
+            </button>
+
+            <button
+              onClick={handleReset}
+              className="mt-3 w-full py-2 text-sm bg-gray-300 rounded hover:bg-gray-400 text-gray-800"
+            >
+              🔁 Reset
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 }
+
