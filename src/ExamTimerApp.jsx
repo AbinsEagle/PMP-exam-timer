@@ -58,7 +58,7 @@ export default function ExamTimerApp() {
     const timePerQuestion = (230 / 180) * 60; // 1.28 minutes = 76.666 seconds
     const estimatedTotalTime = Math.ceil(num * timePerQuestion);
     setTotalTime(estimatedTotalTime);
-  };;
+  };
 
   const handleStartExam = () => {
     setStage("exam");
@@ -126,10 +126,16 @@ export default function ExamTimerApp() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
-        <h1 className="text-2xl font-bold text-center mb-1 text-blue-700">🧠 PMP Exam Trainer</h1>
+        <h1 className="text-2xl font-bold text-center mb-1 text-blue-700">📊 PMP Exam Trainer</h1>
         <p className="text-center text-sm text-gray-600 mb-4 italic">
           📘 PMP Insight: You get 230 minutes to answer 180 questions. That’s about 1.28 minutes per question. ⏳
         </p>
+
+        {stage === "loading" && (
+          <div className="text-center text-lg font-semibold text-gray-600 p-4">
+            🧞 Loading your questions from the PMP Genie...
+          </div>
+        )}
 
         {stage === "input" && (
           <form onSubmit={handleSettingsSubmit} className="space-y-4">
@@ -161,8 +167,6 @@ export default function ExamTimerApp() {
             </button>
           </form>
         )}
-
-        {/* The rest of your component stays unchanged */}
       </div>
     </div>
   );
