@@ -55,7 +55,7 @@ export default function ExamTimerApp() {
   const handleQuestionChange = (e) => {
     const num = Number(e.target.value);
     setTotalQuestions(num);
-    const timePerQuestion = (230 / 180) * 60; // 1.28 minutes = 76.666 seconds
+    const timePerQuestion = (230 / 180) * 60;
     const estimatedTotalTime = Math.ceil(num * timePerQuestion);
     setTotalTime(estimatedTotalTime);
   };
@@ -134,6 +134,24 @@ export default function ExamTimerApp() {
         {stage === "loading" && (
           <div className="text-center text-lg font-semibold text-gray-600 p-4">
             🧞 Loading your questions from the PMP Genie...
+          </div>
+        )}
+
+        {stage === "ready" && (
+          <div className="text-center mt-4 space-y-4">
+            <p className="text-green-700 font-medium text-lg">🚀 You’re all set, {userName}! Let’s begin your PMP challenge.</p>
+            <button
+              onClick={handleStartExam}
+              className="py-3 px-6 bg-green-600 text-white rounded-xl hover:bg-green-700"
+            >
+              Start Exam
+            </button>
+            <button
+              onClick={() => setStage("input")}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              ⬅️ Back
+            </button>
           </div>
         )}
 
