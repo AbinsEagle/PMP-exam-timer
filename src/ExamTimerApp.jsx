@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 
 export default function ExamTimerApp() {
   const [userName, setUserName] = useState("");
@@ -9,7 +10,7 @@ export default function ExamTimerApp() {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(600);
   const [questionTime, setQuestionTime] = useState(0);
-  const [stage, setStage] = useState("input"); // input, ready, exam, result
+  const [stage, setStage] = useState("input");
   const [selectedOption, setSelectedOption] = useState("");
   const [score, setScore] = useState(0);
 
@@ -54,9 +55,9 @@ export default function ExamTimerApp() {
   const handleQuestionChange = (e) => {
     const num = Number(e.target.value);
     setTotalQuestions(num);
-    const timePerQuestion = (230 / 180); // Real PMP: 180 Qs in 230 minutes
+    const timePerQuestion = 230 / 180;
     const estimatedTime = Math.ceil(num * timePerQuestion);
-    setTotalTime(estimatedTime * 60); // convert to seconds
+    setTotalTime(estimatedTime * 60);
   };
 
   const handleStartExam = () => {
@@ -105,6 +106,23 @@ export default function ExamTimerApp() {
     setScore(0);
   };
 
+  const handleDownloadExcel = () => {
+    const data = questions.map((q, idx) => {
+      const a = selectedAnswers[idx] || {};
+      return {
+        Question: q.question,
+        "Your Answer": a.selected,
+        "Correct Answer": q.answer,
+        "Correct?": a.correct ? "Yes" : "No",
+        "Time Taken (s)": a.time || 0
+      };
+    });
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+    XLSX.writeFile(workbook, "pmp_exam_results.xlsx");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
@@ -133,6 +151,7 @@ export default function ExamTimerApp() {
                 required
                 className="w-full p-3 border rounded-lg"
               />
+              <p className="text-sm text-gray-500 mt-1">⏱ Estimated Time: {formatTime(totalTime)}</p>
             </div>
             <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl">
               Generate Questions
@@ -150,7 +169,14 @@ export default function ExamTimerApp() {
 
         {stage === "exam" && (
           <div>
-            <p className="text-right text-sm text-gray-500">⏱ {formatTime(timeLeft)}</p>
+            <div className="flex justify-between text-sm mb-1">
+              <span>✅ {Math.round((currentQuestionIndex / totalQuestions) * 100)}% Complete</span>
+              <span>⏱ {Math.round(((totalTime - timeLeft) / totalTime) * 100)}% Used</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <progress value={currentQuestionIndex} max={totalQuestions} className="w-1/2 mr-1" />
+              <progress value={totalTime - timeLeft} max={totalTime} className="w-1/2 ml-1" />
+            </div>
             <div className="bg-gray-50 p-4 rounded-xl border mb-4">
               <p className="font-semibold mb-2">Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex]?.question}</p>
               {Object.entries(questions[currentQuestionIndex]?.options).map(([key, val]) => (
@@ -167,6 +193,7 @@ export default function ExamTimerApp() {
                 </label>
               ))}
             </div>
+            <p className="text-center text-gray-600 text-sm mb-2">⏲️ Time on this question: {formatTime(questionTime)}</p>
             <button
               onClick={handleNext}
               className="w-full py-3 bg-indigo-600 text-white text-xl rounded-xl hover:bg-indigo-700"
@@ -198,12 +225,20 @@ export default function ExamTimerApp() {
                 );
               })}
             </ul>
-            <button
-              onClick={handleRestart}
-              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              🔁 Restart
-            </button>
+            <div className="mt-4">
+              <button
+                onClick={handleDownloadExcel}
+                className="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                📥 Download Excel Log
+              </button>
+              <button
+                onClick={handleRestart}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                🔁 Restart
+              </button>
+            </div>
           </div>
         )}
       </div>
