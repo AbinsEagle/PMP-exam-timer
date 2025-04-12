@@ -43,6 +43,12 @@ export default function ExamTimerApp() {
         body: JSON.stringify({ count: totalQuestions })
       });
       const data = await res.json();
+      console.log("Fetched Questions:", data);
+      if (!Array.isArray(data) || data.length === 0 || !data[0].question || !data[0].options) {
+        alert("Invalid or empty question data received from API. Please try again.");
+        setStage("input");
+        return;
+      }
       setQuestions(data.slice(0, totalQuestions));
       setTimeLeft(totalTime);
       setStage("ready");
@@ -186,7 +192,7 @@ export default function ExamTimerApp() {
           </form>
         )}
 
-        {stage === "exam" && questions.length > 0 && (
+        {stage === "exam" && questions.length > 0 && questions[currentQuestionIndex] && (
           <div className="space-y-4">
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div className="text-sm text-gray-600">⏱ Time Left: {formatTime(timeLeft)}</div>
