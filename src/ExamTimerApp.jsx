@@ -80,6 +80,8 @@ export default function ExamTimerApp() {
         selected: selectedOption,
         time: questionTime,
         correct: isCorrect,
+        question: currentQ.question,
+        answer: currentQ.answer
       },
     }));
 
@@ -109,16 +111,13 @@ export default function ExamTimerApp() {
   };
 
   const handleDownloadExcel = () => {
-    const data = questions.map((q, idx) => {
-      const a = selectedAnswers[idx] || {};
-      return {
-        Question: q.question,
-        "Your Answer": a.selected,
-        "Correct Answer": q.answer,
-        "Correct?": a.correct ? "Yes" : "No",
-        "Time Taken (s)": a.time || 0,
-      };
-    });
+    const data = Object.entries(selectedAnswers).map(([index, ans]) => ({
+      Question: ans.question,
+      "Your Answer": ans.selected,
+      "Correct Answer": ans.answer,
+      "Correct?": ans.correct ? "Yes" : "No",
+      "Time Taken (s)": ans.time || 0,
+    }));
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
@@ -221,7 +220,6 @@ export default function ExamTimerApp() {
               </button>
             </div>
 
-            {/* ✅ Real-Time Log */}
             {Object.keys(selectedAnswers).length > 0 && (
               <div className="mt-6 p-4 border rounded-md bg-gray-50">
                 <h3 className="font-bold mb-2 text-gray-700">🧾 Real-Time Log</h3>
