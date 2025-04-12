@@ -43,13 +43,11 @@ export default function ExamTimerApp() {
         body: JSON.stringify({ count: totalQuestions })
       });
       const data = await res.json();
-      console.log("Fetched Questions:", data);
-      if (!Array.isArray(data) || data.length === 0 || !data[0].question || !data[0].options) {
-        alert("Invalid or empty question data received from API. Please try again.");
-        setStage("input");
-        return;
-      }
-      setQuestions(data.slice(0, totalQuestions));
+      const questionSet = data.slice(0, totalQuestions).map((q, i) => ({
+        ...q,
+        id: i + 1,
+      }));
+      setQuestions(questionSet);
       setTimeLeft(totalTime);
       setStage("ready");
     } catch (err) {
@@ -81,7 +79,7 @@ export default function ExamTimerApp() {
       [currentQuestionIndex]: {
         selected: selectedOption,
         time: questionTime,
-        correct: isCorrect
+        correct: isCorrect,
       },
     }));
 
@@ -120,7 +118,7 @@ export default function ExamTimerApp() {
         "Your Answer": a.selected,
         "Correct Answer": q.answer,
         "Correct?": a.correct ? "Yes" : "No",
-        "Time Taken (s)": a.time || 0
+        "Time Taken (s)": a.time || 0,
       };
     });
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -212,7 +210,7 @@ export default function ExamTimerApp() {
                       onChange={() => setSelectedOption(opt)}
                       className="mt-1"
                     />
-                    <span className="leading-snug">{String.fromCharCode(65 + idx)}. {opt}</span>
+                    <span className="leading-snug">{opt}</span>
                   </label>
                 </div>
               ))}
@@ -221,11 +219,21 @@ export default function ExamTimerApp() {
                 disabled={!selectedOption}
                 className="mt-4 w-full py-3 bg-purple-600 text-white rounded-xl disabled:opacity-50"
               >
-                Next Question
+                {currentQuestionIndex + 1 === totalQuestions ? "Finish Exam" : "Next Question"}
               </button>
             </div>
           </div>
         )}
+
+        {stage === "result" && (
+          <div className="text-center space-y-4 animate-fade-in">
+            <h2 className="text-xl font-bold text-green-700">🎉 Well done, {userName}!</h2>
+            <p className="text-gray-700">You completed the PMP practice with a score of <strong>{score}</strong> out of <strong>{totalQuestions}</strong>.</p>
+            <button onClick={handleDownloadExcel} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg">⬇️ Download Excel Log</button>
+            <button onClick={handleRestart} className="block w-full mt-4 px-4 py-2 border text-sm rounded-md hover:bg-gray-100">🔁 Start Over</button>
+          </div>
+        )}
+
       </div>
     </div>
   );
