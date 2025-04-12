@@ -55,10 +55,10 @@ export default function ExamTimerApp() {
   const handleQuestionChange = (e) => {
     const num = Number(e.target.value);
     setTotalQuestions(num);
-    const timePerQuestion = 230 / 180;
-    const estimatedTime = Math.ceil(num * timePerQuestion);
-    setTotalTime(estimatedTime * 60);
-  };
+    const timePerQuestion = (230 / 180) * 60; // 1.28 minutes = 76.666 seconds
+    const estimatedTotalTime = Math.ceil(num * timePerQuestion);
+    setTotalTime(estimatedTotalTime);
+  };;
 
   const handleStartExam = () => {
     setStage("exam");
