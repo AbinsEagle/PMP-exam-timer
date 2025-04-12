@@ -36,9 +36,10 @@ export default function ExamTimerApp() {
     e.preventDefault();
     setStage("loading");
     try {
-      const res = await fetch("https://your-render-api.onrender.com/generate-questions", {
+      const res = await fetch("https://pmp-exam-trainer.onrender.com/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count: totalQuestions })
       });
       const data = await res.json();
       setQuestions(data.slice(0, totalQuestions));
