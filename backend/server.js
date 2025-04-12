@@ -1,15 +1,14 @@
 const express = require("express");
 const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.post("/generate-questions", async (req, res) => {
   const count = req.body.count || 10;
@@ -26,13 +25,13 @@ Return in JSON format like:
 `;
 
   try {
-    const chat = await openai.createChatCompletion({
+    const chat = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
 
-    const content = chat.data.choices[0].message.content;
+    const content = chat.choices[0].message.content;
     const data = JSON.parse(content);
     res.json(data);
   } catch (err) {
