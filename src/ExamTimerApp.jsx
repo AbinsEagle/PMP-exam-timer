@@ -125,7 +125,7 @@ export default function ExamTimerApp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
+      <div className="max-w-4xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
         <h1 className="text-2xl font-bold text-center mb-1 text-blue-700">📊 PMP Exam Trainer</h1>
         <p className="text-center text-sm text-gray-600 mb-4 italic">
           📘 PMP Insight: You get 230 minutes to answer 180 questions. That’s about 1.28 minutes per question. ⏳
@@ -188,25 +188,25 @@ export default function ExamTimerApp() {
 
         {stage === "exam" && questions.length > 0 && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div className="text-sm text-gray-600">⏱ Time Left: {formatTime(timeLeft)}</div>
               <div className="text-sm text-gray-600">📍 Question {currentQuestionIndex + 1} of {totalQuestions}</div>
+              <div className="text-sm text-blue-700">⌛ Time on this question: {formatTime(questionTime)}</div>
             </div>
-            <div className="text-sm text-blue-700">⌛ Time on this question: {formatTime(questionTime)}</div>
             <div className="mt-4">
-              <p className="font-semibold mb-2">Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex].question}</p>
+              <p className="font-semibold mb-4 break-words whitespace-pre-wrap">Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex].question}</p>
               {questions[currentQuestionIndex].options.map((opt, idx) => (
-                <div key={idx} className="mb-2">
-                  <label className="inline-flex items-center">
+                <div key={idx} className="mb-2 break-words whitespace-pre-wrap">
+                  <label className="inline-flex items-start gap-2 w-full">
                     <input
                       type="radio"
                       name="option"
                       value={opt}
                       checked={selectedOption === opt}
                       onChange={() => setSelectedOption(opt)}
-                      className="mr-2"
+                      className="mt-1"
                     />
-                    {String.fromCharCode(65 + idx)}. {opt}
+                    <span className="leading-snug">{String.fromCharCode(65 + idx)}. {opt}</span>
                   </label>
                 </div>
               ))}
@@ -224,4 +224,3 @@ export default function ExamTimerApp() {
     </div>
   );
 }
-
