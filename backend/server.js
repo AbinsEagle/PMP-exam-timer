@@ -1,6 +1,6 @@
-import express from "express";
-import cors from "cors";
-import { Configuration, OpenAIApi } from "openai";
+const express = require("express");
+const cors = require("cors");
+const { Configuration, OpenAIApi } = require("openai");
 
 const app = express();
 app.use(cors());
@@ -12,8 +12,10 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 app.post("/generate-questions", async (req, res) => {
+  const count = req.body.count || 10;
   const prompt = `
-Generate ${req.body.count || 10} PMP exam questions. Return as JSON:
+Generate ${count} PMP exam questions with 4 options (A-D) and the correct answer.
+Return in JSON format like:
 [
   {
     "question": "...",
@@ -27,18 +29,17 @@ Generate ${req.body.count || 10} PMP exam questions. Return as JSON:
     const chat = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7
+      temperature: 0.7,
     });
 
     const content = chat.data.choices[0].message.content;
-    const questions = JSON.parse(content);
-    res.json(questions);
+    const data = JSON.parse(content);
+    res.json(data);
   } catch (err) {
     console.error("OpenAI Error:", err.message);
     res.status(500).json({ error: "Failed to generate questions" });
   }
 });
 
-app.listen(5000, () => {
-  console.log("✅ Backend running on http://localhost:5000");
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ Server ready on port ${PORT}`));
