@@ -1,8 +1,7 @@
-// server.js (your backend)
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { OpenAI } from 'openai';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { OpenAI } from "openai";
 
 dotenv.config();
 
@@ -12,37 +11,70 @@ app.use(express.json());
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-app.post('/generate-questions', async (req, res) => {
-  const { count } = req.body;
+const domainWeights = {
+  People: 0.42,
+  Process: 0.50,
+  "Business Environment": 0.08,
+};
 
-  if (!count || typeof count !== 'number') {
-    return res.status(400).json({ error: 'Invalid count provided.' });
-  }
+function getQuestionDistribution(total) {
+  const people = Math.round(total * domainWeights["People"]);
+  const process = Math.round(total * domainWeights["Process"]);
+  const business = total - people - process;
+  return { people, process, business };
+}
+
+app.post("/generate-questions", async (req, res) => {
+  const total = parseInt(req.body.count || 5);
+  const { people, process, business } = getQuestionDistribution(total);
+
+  const domainRequests = [
+    { domain: "People", count: people },
+    { domain: "Process", count: process },
+    { domain: "Business Environment", count: business },
+  ];
+
+  let allQuestions = [];
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a PMP exam question generator. Generate ONLY JSON with no explanation. Format: [{"question":"...","options":["A","B","C","D"],"answer":"A"}]'
-        },
-        {
-          role: 'user',
-          content: `Generate ${count} PMP exam questions in JSON array format.`
-        }
-      ],
-      temperature: 0.7
-    });
+    for (const req of domainRequests) {
+      if (req.count <= 0) continue;
 
-    const content = completion.choices[0].message.content;
-    const questions = JSON.parse(content);
-    res.json(questions);
+      const prompt = `Generate ${req.count} PMP exam-style multiple choice questions strictly based on the '${req.domain}' domain as defined in the PMI Examination Content Outline (ECO). Each question should be JSON formatted as:
+
+[
+  {
+    "question": "...",
+    "options": ["A...", "B...", "C...", "D..."],
+    "answer": "B"
+  }
+]`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a certified PMP exam trainer AI that strictly follows the latest ECO guideline.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
+
+      const parsed = JSON.parse(completion.choices[0].message.content);
+      allQuestions = [...allQuestions, ...parsed];
+    }
+
+    res.json(allQuestions);
   } catch (err) {
-    console.error('OpenAI Error:', err);
-    res.status(500).json({ error: 'Failed to generate questions from OpenAI' });
+    console.error("❌ Error generating questions:", err.message);
+    res.status(500).json({ error: "Failed to generate PMP questions." });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(3000, () => {
+  console.log("🚀 PMP API live on port 3000");
+});
