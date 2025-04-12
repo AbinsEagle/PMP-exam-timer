@@ -1,57 +1,99 @@
 import React, { useState, useEffect } from "react";
 
 export default function ExamTimerApp() {
-  const [totalTime, setTotalTime] = useState(600); // total exam time
+  const [userName, setUserName] = useState("");
+  const [totalTime, setTotalTime] = useState(600);
+  const [totalQuestions, setTotalQuestions] = useState(5);
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(600);
   const [questionTime, setQuestionTime] = useState(0);
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [examFinished, setExamFinished] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-
-  const sampleQuestion = {
-    question: "You are working with a cross-functional Agile team on a product release. Midway through the sprint, a stakeholder approaches you requesting a critical feature update. What should you do?",
-    options: {
-      A: "Pause the sprint and implement the change immediately.",
-      B: "Log the request and defer discussion to the next sprint planning session.",
-      C: "Update the sprint backlog and inform the team.",
-      D: "Add the change to the current sprint and assign it to the most available developer."
-    },
-    answer: "B"
-  };
+  const [stage, setStage] = useState("input"); // input, ready, exam, result
+  const [selectedOption, setSelectedOption] = useState("");
+  const [score, setScore] = useState(0);
 
   useEffect(() => {
     let timer;
-    if (sessionStarted && !examFinished) {
+    if (stage === "exam" && timeLeft > 0) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleAutoSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
         setQuestionTime((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [sessionStarted, examFinished]);
+  }, [stage]);
 
-  const formatTime = (sec) => {
-    const min = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${min}m ${s}s`;
+  const formatTime = (sec) => `${Math.floor(sec / 60)}m ${sec % 60}s`;
+
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    setStage("loading");
+    try {
+      const res = await fetch("https://your-render-api.onrender.com/generate-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      setQuestions(data.slice(0, totalQuestions));
+      setTimeLeft(totalTime);
+      setStage("ready");
+    } catch (err) {
+      alert("Failed to fetch questions");
+      setStage("input");
+    }
   };
 
-  const handleStart = () => {
-    setSessionStarted(true);
-    setTimeLeft(totalTime);
+  const handleStartExam = () => {
+    setStage("exam");
     setQuestionTime(0);
   };
 
   const handleNext = () => {
-    setExamFinished(true); // for now just finish
+    const currentQ = questions[currentQuestionIndex];
+    const isCorrect = selectedOption === currentQ.answer;
+    if (isCorrect) setScore((prev) => prev + 1);
+
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [currentQuestionIndex]: {
+        selected: selectedOption,
+        time: questionTime,
+        correct: isCorrect
+      },
+    }));
+
+    if (currentQuestionIndex + 1 < totalQuestions) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setQuestionTime(0);
+      setSelectedOption("");
+    } else {
+      setStage("result");
+    }
   };
 
-  const handleReset = () => {
-    setSessionStarted(false);
-    setExamFinished(false);
-    setTimeLeft(totalTime);
+  const handleAutoSubmit = () => {
+    setStage("result");
+  };
+
+  const handleRestart = () => {
+    setUserName("");
+    setTotalTime(600);
+    setTotalQuestions(5);
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setTimeLeft(600);
     setQuestionTime(0);
-    setSelectedAnswer("");
+    setStage("input");
+    setSelectedOption("");
+    setScore(0);
   };
 
   return (
@@ -59,66 +101,101 @@ export default function ExamTimerApp() {
       <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl p-6 font-sans border border-gray-300">
         <h1 className="text-2xl font-bold text-center mb-4 text-blue-700">🧠 PMP Exam Timer</h1>
 
-        {!sessionStarted ? (
-          <button
-            onClick={handleStart}
-            className="w-full py-4 bg-green-500 text-white rounded-xl text-xl hover:bg-green-600"
-          >
+        {stage === "input" && (
+          <form onSubmit={handleSettingsSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Your name"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+              className="w-full p-3 border rounded-lg"
+            />
+            <input
+              type="number"
+              placeholder="Total time in minutes"
+              value={totalTime / 60}
+              onChange={(e) => setTotalTime(Number(e.target.value) * 60)}
+              required
+              className="w-full p-3 border rounded-lg"
+            />
+            <input
+              type="number"
+              placeholder="Number of questions"
+              value={totalQuestions}
+              onChange={(e) => setTotalQuestions(Number(e.target.value))}
+              required
+              className="w-full p-3 border rounded-lg"
+            />
+            <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-xl">
+              Generate Questions
+            </button>
+          </form>
+        )}
+
+        {stage === "loading" && <p className="text-center">Loading questions from ChatGPT...</p>}
+
+        {stage === "ready" && (
+          <button onClick={handleStartExam} className="w-full py-3 bg-green-600 text-white text-xl rounded-xl">
             ▶️ Start Exam
           </button>
-        ) : examFinished ? (
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-green-700">🎉 Exam Finished</h2>
-            <p className="mt-2">Total Time: {formatTime(totalTime - timeLeft)}</p>
-            <p>Question Time: {formatTime(questionTime)}</p>
-            <p className="mt-2">
-              Your answer: <strong>{selectedAnswer || "None"}</strong>
-              <br />
-              Correct answer: <strong>{sampleQuestion.answer}</strong>
-            </p>
-            <button
-              onClick={handleReset}
-              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              🔁 Back to Start
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div className="mb-4 text-center">
-              <p className="text-sm text-gray-600">🕒 Question Time: {formatTime(questionTime)}</p>
-              <p className="text-sm text-gray-600">⏰ Total Time Left: {formatTime(timeLeft)}</p>
-            </div>
+        )}
 
+        {stage === "exam" && (
+          <div>
+            <p className="text-right text-sm text-gray-500">⏱ {formatTime(timeLeft)}</p>
             <div className="bg-gray-50 p-4 rounded-xl border mb-4">
-              <h2 className="text-md font-semibold mb-2">{sampleQuestion.question}</h2>
-              {Object.entries(sampleQuestion.options).map(([key, val]) => (
+              <p className="font-semibold mb-2">Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex]?.question}</p>
+              {Object.entries(questions[currentQuestionIndex]?.options).map(([key, val]) => (
                 <label key={key} className="block mb-2">
                   <input
                     type="radio"
                     name="option"
                     value={key}
-                    checked={selectedAnswer === key}
-                    onChange={(e) => setSelectedAnswer(e.target.value)}
+                    checked={selectedOption === key}
+                    onChange={(e) => setSelectedOption(e.target.value)}
                     className="mr-2"
                   />
-                  <strong>{key}.</strong> {val}
+                  <strong>{key}</strong>. {val}
                 </label>
               ))}
             </div>
-
             <button
               onClick={handleNext}
               className="w-full py-3 bg-indigo-600 text-white text-xl rounded-xl hover:bg-indigo-700"
+              disabled={!selectedOption}
             >
-              {examFinished ? "Finish" : "Next Question"}
+              {currentQuestionIndex + 1 === totalQuestions ? "Finish" : "Next Question"}
             </button>
+          </div>
+        )}
 
+        {stage === "result" && (
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-green-700">✅ Exam Complete</h2>
+            <p className="text-lg my-2">Score: {score}/{totalQuestions} — {score / totalQuestions >= 0.6 ? "Pass" : "Fail"}</p>
+            <ul className="text-left mt-4 text-sm">
+              {questions.map((q, idx) => {
+                const user = selectedAnswers[idx] || {};
+                const isCorrect = user.correct;
+                return (
+                  <li
+                    key={idx}
+                    className={`mb-1 p-2 rounded ${isCorrect ? "bg-green-100" : "bg-red-100"}`}
+                  >
+                    <strong>Q{idx + 1}:</strong> {q.question}<br />
+                    <span>Your Answer: {user.selected || "None"}</span><br />
+                    <span>Correct Answer: {q.answer}</span><br />
+                    <span>Time: {formatTime(user.time || 0)}</span>
+                  </li>
+                );
+              })}
+            </ul>
             <button
-              onClick={handleReset}
-              className="mt-3 w-full py-2 text-sm bg-gray-300 rounded hover:bg-gray-400 text-gray-800"
+              onClick={handleRestart}
+              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
-              🔁 Reset
+              🔁 Restart
             </button>
           </div>
         )}
@@ -126,4 +203,3 @@ export default function ExamTimerApp() {
     </div>
   );
 }
-
