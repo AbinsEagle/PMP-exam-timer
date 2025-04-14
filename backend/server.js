@@ -1,15 +1,23 @@
-// api/generate-questions.js
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 import { OpenAI } from "openai";
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+app.get("/", (req, res) => {
+  res.send("✅ PMP Question Generator API is running!");
+});
 
+app.post("/generate-questions", async (req, res) => {
   const total = parseInt(req.body.count || 5);
 
   const prompt = `
@@ -46,17 +54,26 @@ Respond ONLY in this JSON format:
       ],
     });
 
-    const content = completion.choices[0].message.content;
+    const content = completion.choices[0]?.message?.content || "";
 
     try {
       const parsed = JSON.parse(content);
-      return res.status(200).json(parsed);
+      if (!parsed.questions) {
+        throw new Error("No questions found in GPT response.");
+      }
+      return res.json(parsed);
     } catch (err) {
       console.error("❌ JSON Parse Error:", err.message);
+      console.log("🧾 GPT Raw Content:", content); // Log raw response for debugging
       return res.status(500).json({ error: "Invalid response format from GPT." });
     }
   } catch (err) {
     console.error("❌ OpenAI Error:", err.message);
     return res.status(500).json({ error: "Failed to fetch questions or insight." });
   }
-}
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 PMP backend server running on port ${PORT}`);
+});
