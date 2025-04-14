@@ -5,11 +5,6 @@ import { OpenAI } from "openai";
 
 dotenv.config();
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY is missing in environment variables.");
-  process.exit(1);
-}
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -18,24 +13,32 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Health check route
+app.get("/", (req, res) => {
+  res.send("✅ PMP backend is up and running!");
+});
+
+// Generate PMP questions
 app.post("/generate-questions", async (req, res) => {
   const total = parseInt(req.body.count || 5);
 
   const prompt = `
-Generate ${total} PMP exam-style multiple choice questions STRICTLY based on the PMI Examination Content Outline (ECO).
-Also include ONE fresh, real-world PMP insight or project management trend based on recent events, news, or professional discussions.
+You are a certified PMP trainer AI. 
+Generate ${total} PMP exam-style multiple choice questions STRICTLY based on the latest PMI Examination Content Outline (ECO).
 
-Respond ONLY in this JSON format:
+👉 Also, include ONE insightful, real-world project management fact/trend based on recent developments, tools, agile changes, or job market buzz — known to top 5% of PMs.
+
+Return ONLY valid JSON with this structure:
 
 {
-  "insight": "Your dynamic PMP insight here",
+  "insight": "A fresh PMP insight here...",
   "questions": [
     {
-      "question": "Sample question text...",
+      "question": "Your question text here...",
       "options": ["A. Option A", "B. Option B", "C. Option C", "D. Option D"],
       "answer": "B",
-      "rationale": "Why this is the right answer...",
-      "eco_task": "Task name from the ECO"
+      "rationale": "Explain why this is the best answer.",
+      "eco_task": "Mapped ECO task from PMI content outline"
     }
   ]
 }
@@ -47,30 +50,32 @@ Respond ONLY in this JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a PMP trainer AI. Follow the PMI ECO guidelines strictly.",
+          content: "You are a PMP trainer AI who generates exam-level content strictly based on the latest PMI ECO and PMP best practices."
         },
         {
           role: "user",
-          content: prompt,
-        },
+          content: prompt
+        }
       ],
+      temperature: 0.7
     });
 
-    const content = completion.choices[0].message.content;
+    const messageContent = completion.choices[0].message.content;
 
-    let parsed;
     try {
-      parsed = JSON.parse(content);
+      const parsed = JSON.parse(messageContent);
+      if (!parsed.questions || !Array.isArray(parsed.questions)) {
+        throw new Error("Invalid format: questions array missing");
+      }
+      res.json(parsed);
     } catch (err) {
-      console.error("❌ JSON Parse Error:", err.message);
-      console.log("Raw GPT Response:", content); // Add this for debugging
-      return res.status(500).json({ error: "Invalid response format from GPT." });
+      console.error("❌ Failed to parse GPT JSON:", err.message);
+      res.status(500).json({ error: "Invalid GPT response format" });
     }
 
-    return res.json(parsed);
   } catch (err) {
-    console.error("❌ OpenAI Error:", err.message);
-    return res.status(500).json({ error: "Failed to fetch questions or insight." });
+    console.error("❌ OpenAI API error:", err.message);
+    res.status(500).json({ error: "Failed to fetch questions or insight from OpenAI" });
   }
 });
 
