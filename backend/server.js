@@ -54,19 +54,17 @@ Respond ONLY in this JSON format:
       ],
     });
 
-    const content = completion.choices[0]?.message?.content || "";
+    const content = completion.choices[0].message.content;
 
+    let parsed;
     try {
-      const parsed = JSON.parse(content);
-      if (!parsed.questions) {
-        throw new Error("No questions found in GPT response.");
-      }
-      return res.json(parsed);
+      parsed = JSON.parse(content);
     } catch (err) {
       console.error("❌ JSON Parse Error:", err.message);
-      console.log("🧾 GPT Raw Content:", content); // Log raw response for debugging
       return res.status(500).json({ error: "Invalid response format from GPT." });
     }
+
+    return res.json(parsed);
   } catch (err) {
     console.error("❌ OpenAI Error:", err.message);
     return res.status(500).json({ error: "Failed to fetch questions or insight." });
