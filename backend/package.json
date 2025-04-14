@@ -5,12 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "vercel-build": "echo 'Vercel is serverless, no build step required'"
+    "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "cors": "^2.8.5",
     "openai": "^4.29.1"
   }
 }
