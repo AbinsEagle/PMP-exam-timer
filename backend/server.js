@@ -1,23 +1,15 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+// api/generate-questions.js
 import { OpenAI } from "openai";
-
-dotenv.config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.get("/", (req, res) => {
-  res.send("✅ PMP Question Generator API is running!");
-});
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-app.post("/generate-questions", async (req, res) => {
   const total = parseInt(req.body.count || 5);
 
   const prompt = `
@@ -56,22 +48,15 @@ Respond ONLY in this JSON format:
 
     const content = completion.choices[0].message.content;
 
-    let parsed;
     try {
-      parsed = JSON.parse(content);
+      const parsed = JSON.parse(content);
+      return res.status(200).json(parsed);
     } catch (err) {
       console.error("❌ JSON Parse Error:", err.message);
       return res.status(500).json({ error: "Invalid response format from GPT." });
     }
-
-    return res.json(parsed);
   } catch (err) {
     console.error("❌ OpenAI Error:", err.message);
     return res.status(500).json({ error: "Failed to fetch questions or insight." });
   }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 PMP backend server running on port ${PORT}`);
-});
+}
