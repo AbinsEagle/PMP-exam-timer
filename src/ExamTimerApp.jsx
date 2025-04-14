@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:3000";
-
 export default function ExamTimerApp() {
   const [userName, setUserName] = useState("");
   const [totalQuestions, setTotalQuestions] = useState(5);
@@ -15,13 +13,13 @@ export default function ExamTimerApp() {
   const [stage, setStage] = useState("input");
   const [selectedOption, setSelectedOption] = useState("");
   const [score, setScore] = useState(0);
-  const [dynamicInsight, setDynamicInsight] = useState("Interesting PMP fact will appear here.");
+  const [dynamicInsight, setDynamicInsight] = useState("🧠 PMP Insight will appear here.");
 
   useEffect(() => {
     let timer;
     if (stage === "exam" && timeLeft > 0) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+        setTimeLeft((prev) => Math.max(0, prev - 1));
         setQuestionTime((prev) => prev + 1);
       }, 1000);
     }
@@ -32,30 +30,27 @@ export default function ExamTimerApp() {
 
   const handleSettingsSubmit = async (e) => {
     e.preventDefault();
-    const calculatedTime = Math.ceil((230 / 180) * totalQuestions * 60);
-    setEstimatedTime(calculatedTime);
-    setTimeLeft(calculatedTime);
+    const perQuestionSec = (230 / 180) * 60;
+    const totalTimeCalc = Math.ceil(perQuestionSec * totalQuestions);
+    setEstimatedTime(totalTimeCalc);
+    setTimeLeft(totalTimeCalc);
     setStage("loading");
 
     try {
-      const res = await fetch(`${BACKEND_URL}/generate-questions`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-questions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: totalQuestions })
+        body: JSON.stringify({ count: totalQuestions }),
       });
 
-      const data = await res.json();
-
-      if (!data || !data.questions || !Array.isArray(data.questions)) {
-        throw new Error("Invalid format from server");
-      }
+      const data = await response.json();
+      if (!data.questions || !Array.isArray(data.questions)) throw new Error("Invalid response format");
 
       setQuestions(data.questions);
-      setDynamicInsight(data.insight || "Always stay updated with PMP exam changes!");
+      setDynamicInsight(data.insight || "Stay sharp! PMP standards are evolving constantly.");
       setStage("ready");
     } catch (err) {
-      console.error("❌ Fetch Error:", err.message);
-      alert("Failed to fetch questions. Please check backend connection or API key.");
+      alert("Failed to fetch questions: " + err.message);
       setStage("input");
     }
   };
@@ -68,7 +63,6 @@ export default function ExamTimerApp() {
   const handleNext = () => {
     const currentQ = questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQ.answer;
-    if (isCorrect) setScore((prev) => prev + 1);
 
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -79,12 +73,14 @@ export default function ExamTimerApp() {
         question: currentQ.question,
         answer: currentQ.answer,
         rationale: currentQ.rationale,
-        eco_task: currentQ.eco_task
-      }
+        eco_task: currentQ.eco_task,
+      },
     }));
 
+    if (isCorrect) setScore((prev) => prev + 1);
+
     if (currentQuestionIndex + 1 < totalQuestions) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setQuestionTime(0);
       setSelectedOption("");
     } else {
@@ -93,53 +89,49 @@ export default function ExamTimerApp() {
   };
 
   const handleDownloadExcel = () => {
-    const data = Object.entries(selectedAnswers).map(([index, ans]) => ({
-      Question: ans.question,
-      "Your Answer": ans.selected,
-      "Correct Answer": ans.answer,
-      "Correct?": ans.correct ? "Yes" : "No",
-      "Time Taken (s)": ans.time || 0,
-      Rationale: ans.rationale,
-      "ECO Task": ans.eco_task
+    const data = Object.entries(selectedAnswers).map(([idx, val]) => ({
+      "Q#": Number(idx) + 1,
+      Question: val.question,
+      "Your Answer": val.selected,
+      "Correct Answer": val.answer,
+      "Correct?": val.correct ? "✅ Yes" : "❌ No",
+      "Time Taken (s)": val.time,
+      Rationale: val.rationale,
+      "ECO Task": val.eco_task,
     }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-    XLSX.writeFile(workbook, "pmp_exam_results.xlsx");
+
+    const sheet = XLSX.utils.json_to_sheet(data);
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, "PMP Results");
+    XLSX.writeFile(book, "pmp_exam_results.xlsx");
   };
 
   return (
     <div className="p-4 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
       {stage === "input" && (
         <form onSubmit={handleSettingsSubmit} className="space-y-4">
-          <h1 className="text-3xl font-bold text-blue-800 text-center">📊 PMP Exam Trainer</h1>
-          <p className="italic text-center text-gray-600 text-sm">
-            📘 PMP Insight: You get 230 minutes for 180 questions. That's about 1.28 minutes per question.
+          <h1 className="text-3xl font-bold text-center text-blue-800">📊 PMP Exam Trainer</h1>
+          <p className="text-center text-sm text-gray-600 italic">
+            🎯 You get 230 minutes for 180 questions. That’s ~1.28 min per question.
           </p>
-          <div className="text-blue-700 text-center italic">💡 {dynamicInsight}</div>
-
-          <div>
-            <label htmlFor="username" className="block font-semibold">🙋 Your Name</label>
-            <input
-              id="username"
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="questionCount" className="block font-semibold">📝 Number of Questions</label>
-            <input
-              id="questionCount"
-              type="number"
-              value={totalQuestions}
-              onChange={(e) => setTotalQuestions(Number(e.target.value))}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
+          <p className="text-center text-blue-700 italic">💡 {dynamicInsight}</p>
+          <input
+            type="text"
+            required
+            placeholder="👤 Enter Your Name"
+            className="w-full p-2 border rounded"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+          />
+          <input
+            type="number"
+            min={1}
+            required
+            placeholder="🔢 No. of Questions"
+            className="w-full p-2 border rounded"
+            value={totalQuestions}
+            onChange={(e) => setTotalQuestions(Number(e.target.value))}
+          />
           <p className="text-sm text-gray-500">⏱️ Estimated Time: {formatTime(estimatedTime)}</p>
           <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
             Generate Questions
@@ -149,11 +141,11 @@ export default function ExamTimerApp() {
 
       {stage === "ready" && (
         <div className="text-center">
-          <p className="text-lg font-semibold">✅ Questions are ready!</p>
-          <p className="text-sm text-gray-500">Estimated Time: {formatTime(estimatedTime)}</p>
+          <h2 className="text-xl font-semibold">✅ Questions Ready!</h2>
+          <p className="text-gray-600 text-sm mb-4">Estimated Time: {formatTime(estimatedTime)}</p>
           <button
             onClick={handleStartExam}
-            className="mt-4 bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700"
+            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
           >
             Start Exam
           </button>
@@ -161,35 +153,34 @@ export default function ExamTimerApp() {
       )}
 
       {stage === "exam" && questions.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center text-xs text-gray-600">
+        <div>
+          <div className="flex justify-between text-xs text-gray-600 mb-2">
             <span>⏰ Time Left: {formatTime(timeLeft)}</span>
-            <span>📍 Question {currentQuestionIndex + 1} of {totalQuestions}</span>
-            <span>⏳ This Question: {formatTime(questionTime)}</span>
+            <span>📍 Q{currentQuestionIndex + 1} of {totalQuestions}</span>
+            <span>⏳ Time on Question: {formatTime(questionTime)}</span>
           </div>
 
-          <div className="p-4 border rounded bg-gray-50">
+          <div className="bg-gray-50 p-4 rounded shadow">
             <p className="font-semibold">
               Q{currentQuestionIndex + 1}: {questions[currentQuestionIndex].question}
             </p>
             {questions[currentQuestionIndex].options.map((opt, idx) => (
               <div key={idx} className="mt-2">
-                <label className="block" htmlFor={`option-${idx}`}>
+                <label className="block cursor-pointer">
                   <input
-                    id={`option-${idx}`}
                     type="radio"
                     name="option"
                     value={opt}
+                    className="mr-2"
                     checked={selectedOption === opt}
                     onChange={() => setSelectedOption(opt)}
-                    className="mr-2"
                   />
                   {opt}
                 </label>
                 {selectedOption === opt && (
-                  <div className="text-sm text-gray-600 mt-1">
-                    <strong>Rationale:</strong> {questions[currentQuestionIndex].rationale}<br />
-                    <strong>ECO Task:</strong> {questions[currentQuestionIndex].eco_task}
+                  <div className="mt-1 text-sm text-gray-600">
+                    <strong>📚 Rationale:</strong> {questions[currentQuestionIndex].rationale}<br />
+                    <strong>📌 ECO Task:</strong> {questions[currentQuestionIndex].eco_task}
                   </div>
                 )}
               </div>
@@ -197,19 +188,20 @@ export default function ExamTimerApp() {
           </div>
 
           <button
-            onClick={handleNext}
             disabled={!selectedOption}
-            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+            onClick={handleNext}
+            className="mt-4 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
           >
             {currentQuestionIndex + 1 === totalQuestions ? "Finish Exam" : "Next Question"}
           </button>
 
-          <div className="text-sm mt-4">
-            <strong>🧾 Real-Time Log</strong>
-            <ul className="list-disc pl-4">
+          <div className="mt-4 text-sm">
+            <strong>📈 Real-Time Log</strong>
+            <ul className="list-disc pl-4 mt-1">
               {Object.entries(selectedAnswers).map(([key, val]) => (
                 <li key={key}>
-                  Q{Number(key) + 1}: {formatTime(val.time)} – {val.selected} {val.selected === val.answer ? "✔" : "❌"}
+                  Q{Number(key) + 1}: {formatTime(val.time)} – {val.selected}{" "}
+                  {val.selected === val.answer ? "✔ Correct" : "❌ Wrong"}
                 </li>
               ))}
             </ul>
@@ -220,9 +212,7 @@ export default function ExamTimerApp() {
       {stage === "result" && (
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold">🎉 Exam Completed!</h2>
-          <p>
-            {userName}, you scored {score} out of {totalQuestions}.
-          </p>
+          <p>{userName}, you scored {score} out of {totalQuestions}.</p>
           <button
             onClick={handleDownloadExcel}
             className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
