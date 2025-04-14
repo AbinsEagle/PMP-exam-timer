@@ -13,32 +13,27 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Health check route
 app.get("/", (req, res) => {
-  res.send("✅ PMP backend is up and running!");
+  res.send("✅ PMP Question Generator API is running!");
 });
 
-// Generate PMP questions
 app.post("/generate-questions", async (req, res) => {
   const total = parseInt(req.body.count || 5);
 
   const prompt = `
-You are a certified PMP trainer AI. 
-Generate ${total} PMP exam-style multiple choice questions STRICTLY based on the latest PMI Examination Content Outline (ECO).
+Generate ${total} PMP exam-style multiple choice questions STRICTLY based on the PMI Examination Content Outline (ECO).
+Also include ONE fresh, real-world PMP insight or project management trend based on recent events, news, or professional discussions.
 
-👉 Also, include ONE insightful, real-world project management fact/trend based on recent developments, tools, agile changes, or job market buzz — known to top 5% of PMs.
-
-Return ONLY valid JSON with this structure:
-
+Respond ONLY in this JSON format:
 {
-  "insight": "A fresh PMP insight here...",
+  "insight": "Your dynamic PMP insight here",
   "questions": [
     {
-      "question": "Your question text here...",
+      "question": "Sample question text...",
       "options": ["A. Option A", "B. Option B", "C. Option C", "D. Option D"],
       "answer": "B",
-      "rationale": "Explain why this is the best answer.",
-      "eco_task": "Mapped ECO task from PMI content outline"
+      "rationale": "Why this is the right answer...",
+      "eco_task": "Task name from the ECO"
     }
   ]
 }
@@ -50,32 +45,29 @@ Return ONLY valid JSON with this structure:
       messages: [
         {
           role: "system",
-          content: "You are a PMP trainer AI who generates exam-level content strictly based on the latest PMI ECO and PMP best practices."
+          content: "You are a PMP trainer AI. Follow the PMI ECO guidelines strictly.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      temperature: 0.7
     });
 
-    const messageContent = completion.choices[0].message.content;
+    const content = completion.choices[0].message.content;
 
+    let parsed;
     try {
-      const parsed = JSON.parse(messageContent);
-      if (!parsed.questions || !Array.isArray(parsed.questions)) {
-        throw new Error("Invalid format: questions array missing");
-      }
-      res.json(parsed);
+      parsed = JSON.parse(content);
     } catch (err) {
-      console.error("❌ Failed to parse GPT JSON:", err.message);
-      res.status(500).json({ error: "Invalid GPT response format" });
+      console.error("❌ JSON Parse Error:", err.message);
+      return res.status(500).json({ error: "Invalid response format from GPT." });
     }
 
+    return res.json(parsed);
   } catch (err) {
-    console.error("❌ OpenAI API error:", err.message);
-    res.status(500).json({ error: "Failed to fetch questions or insight from OpenAI" });
+    console.error("❌ OpenAI Error:", err.message);
+    return res.status(500).json({ error: "Failed to fetch questions or insight." });
   }
 });
 
