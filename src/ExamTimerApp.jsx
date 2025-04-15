@@ -37,7 +37,7 @@ export default function ExamTimerApp() {
     setStage("loading");
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-questions`, {
+      const response = await fetch("https://your-backend-name.onrender.com/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ count: totalQuestions }),
