@@ -2,41 +2,52 @@ import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 
 export default function ExamTimerApp() {
-  const [userName, setUserName] = useState("");
-  const [totalQuestions, setTotalQuestions] = useState(5);
-  const [estimatedTime, setEstimatedTime] = useState(0);
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(600);
-  const [questionTime, setQuestionTime] = useState(0);
-  const [stage, setStage] = useState("input");
-  const [selectedOption, setSelectedOption] = useState("");
-  const [score, setScore] = useState(0);
+  // ----- STATE VARIABLES -----
+  const [userName, setUserName] = useState("");               // User's name
+  const [totalQuestions, setTotalQuestions] = useState(5);      // Number of exam questions
+  const [estimatedTime, setEstimatedTime] = useState(0);        // Calculated total exam time (in seconds)
+  const [questions, setQuestions] = useState([]);               // Questions received from the backend API
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // Tracks current question number
+  const [selectedAnswers, setSelectedAnswers] = useState({});   // Stores user's answers along with details per question
+  const [timeLeft, setTimeLeft] = useState(600);                // Overall exam timer (in seconds)
+  const [questionTime, setQuestionTime] = useState(0);          // Time taken on the current question
+  const [stage, setStage] = useState("input");                  // Current stage: "input", "loading", "ready", "exam", "result"
+  const [selectedOption, setSelectedOption] = useState("");     // Option selected for current question
+  const [score, setScore] = useState(0);                        // User's total correct answers
   const [dynamicInsight, setDynamicInsight] = useState("🧠 PMP Insight will appear here.");
 
+  // ----- EFFECT: Exam Timer & Question Timer -----
   useEffect(() => {
     let timer;
     if (stage === "exam" && timeLeft > 0) {
       timer = setInterval(() => {
+        // Decrement overall time and increment current question time every second
         setTimeLeft((prev) => Math.max(0, prev - 1));
         setQuestionTime((prev) => prev + 1);
       }, 1000);
     }
+    // Clean up the timer when component unmounts or dependencies change
     return () => clearInterval(timer);
   }, [stage, timeLeft]);
 
+  // ----- HELPER FUNCTION: Format Seconds into Minutes and Seconds -----
   const formatTime = (sec) => `${Math.floor(sec / 60)}m ${sec % 60}s`;
 
+  // ----- HANDLER: Submit Exam Settings and Fetch Questions -----
   const handleSettingsSubmit = async (e) => {
     e.preventDefault();
-    const perQuestionSec = (230 / 180) * 60;
+
+    // Calculate estimated time based on 230 minutes for 180 questions ~ 1.28 minutes per question
+    const perQuestionSec = (230 / 180) * 60; // convert minutes to seconds per question
     const totalTimeCalc = Math.ceil(perQuestionSec * totalQuestions);
     setEstimatedTime(totalTimeCalc);
     setTimeLeft(totalTimeCalc);
+
+    // Change stage to loading while fetching questions
     setStage("loading");
 
     try {
+      // Replace the URL below with your actual backend URL (if not using Codespaces locally)
       const response = await fetch("https://your-backend-name.onrender.com/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,26 +55,35 @@ export default function ExamTimerApp() {
       });
 
       const data = await response.json();
-      if (!data.questions || !Array.isArray(data.questions)) throw new Error("Invalid response format");
+      // Ensure valid questions format from the backend
+      if (!data.questions || !Array.isArray(data.questions)) {
+        throw new Error("Invalid response format");
+      }
 
       setQuestions(data.questions);
+      // Optionally set insight from response, or default message if not provided
       setDynamicInsight(data.insight || "Stay sharp! PMP standards are evolving constantly.");
       setStage("ready");
     } catch (err) {
       alert("Failed to fetch questions: " + err.message);
+      // Back to input if fetch fails
       setStage("input");
     }
   };
 
+  // ----- HANDLER: Begin the Exam -----
   const handleStartExam = () => {
+    // Move from ready stage to exam stage and reset current question timer
     setStage("exam");
     setQuestionTime(0);
   };
 
+  // ----- HANDLER: Process Next Question -----
   const handleNext = () => {
     const currentQ = questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQ.answer;
 
+    // Save the answer details in the selectedAnswers state
     setSelectedAnswers((prev) => ({
       ...prev,
       [currentQuestionIndex]: {
@@ -77,17 +97,21 @@ export default function ExamTimerApp() {
       },
     }));
 
+    // Increment score if answer is correct
     if (isCorrect) setScore((prev) => prev + 1);
 
+    // Check if there are more questions
     if (currentQuestionIndex + 1 < totalQuestions) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setQuestionTime(0);
       setSelectedOption("");
     } else {
+      // End exam if last question reached
       setStage("result");
     }
   };
 
+  // ----- HANDLER: Download Exam Log as Excel File -----
   const handleDownloadExcel = () => {
     const data = Object.entries(selectedAnswers).map(([idx, val]) => ({
       "Q#": Number(idx) + 1,
@@ -100,14 +124,17 @@ export default function ExamTimerApp() {
       "ECO Task": val.eco_task,
     }));
 
+    // Create a new Excel sheet from the data and prompt a file download
     const sheet = XLSX.utils.json_to_sheet(data);
     const book = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(book, sheet, "PMP Results");
     XLSX.writeFile(book, "pmp_exam_results.xlsx");
   };
 
+  // ----- RENDERING THE COMPONENT BASED ON THE CURRENT STAGE -----
   return (
     <div className="p-4 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+      {/* Stage: Input Settings Form */}
       {stage === "input" && (
         <form onSubmit={handleSettingsSubmit} className="space-y-4">
           <h1 className="text-3xl font-bold text-center text-blue-800">📊 PMP Exam Trainer</h1>
@@ -132,17 +159,22 @@ export default function ExamTimerApp() {
             value={totalQuestions}
             onChange={(e) => setTotalQuestions(Number(e.target.value))}
           />
-          <p className="text-sm text-gray-500">⏱️ Estimated Time: {formatTime(estimatedTime)}</p>
+          <p className="text-sm text-gray-500">
+            ⏱️ Estimated Time: {formatTime(estimatedTime)}
+          </p>
           <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
             Generate Questions
           </button>
         </form>
       )}
 
+      {/* Stage: Questions Ready Screen */}
       {stage === "ready" && (
         <div className="text-center">
           <h2 className="text-xl font-semibold">✅ Questions Ready!</h2>
-          <p className="text-gray-600 text-sm mb-4">Estimated Time: {formatTime(estimatedTime)}</p>
+          <p className="text-gray-600 text-sm mb-4">
+            Estimated Time: {formatTime(estimatedTime)}
+          </p>
           <button
             onClick={handleStartExam}
             className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
@@ -152,11 +184,14 @@ export default function ExamTimerApp() {
         </div>
       )}
 
+      {/* Stage: Exam In Progress */}
       {stage === "exam" && questions.length > 0 && (
         <div>
           <div className="flex justify-between text-xs text-gray-600 mb-2">
             <span>⏰ Time Left: {formatTime(timeLeft)}</span>
-            <span>📍 Q{currentQuestionIndex + 1} of {totalQuestions}</span>
+            <span>
+              📍 Q{currentQuestionIndex + 1} of {totalQuestions}
+            </span>
             <span>⏳ Time on Question: {formatTime(questionTime)}</span>
           </div>
 
@@ -179,7 +214,8 @@ export default function ExamTimerApp() {
                 </label>
                 {selectedOption === opt && (
                   <div className="mt-1 text-sm text-gray-600">
-                    <strong>📚 Rationale:</strong> {questions[currentQuestionIndex].rationale}<br />
+                    <strong>📚 Rationale:</strong> {questions[currentQuestionIndex].rationale}
+                    <br />
                     <strong>📌 ECO Task:</strong> {questions[currentQuestionIndex].eco_task}
                   </div>
                 )}
@@ -209,10 +245,13 @@ export default function ExamTimerApp() {
         </div>
       )}
 
+      {/* Stage: Exam Results */}
       {stage === "result" && (
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold">🎉 Exam Completed!</h2>
-          <p>{userName}, you scored {score} out of {totalQuestions}.</p>
+          <p>
+            {userName}, you scored {score} out of {totalQuestions}.
+          </p>
           <button
             onClick={handleDownloadExcel}
             className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
